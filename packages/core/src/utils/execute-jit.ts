@@ -1,4 +1,4 @@
-import { Module } from 'node:module'
+import mod from 'node:module'
 import path from 'node:path'
 import vm from 'node:vm'
 
@@ -24,9 +24,10 @@ export interface JitExecutionResult<T> {
 
   /**
    * The exports of the script.
+   *
+   * FIXME: I don't get how TS works with these definitions ??
    */
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  exports: any
+  module: mod
 }
 
 /**
@@ -51,22 +52,19 @@ export function executeJit<T>(file: string, options: JitExecutionOptions): JitEx
 
   /**
    * This module handles any requires, exports, etc.
-   * i.e. {@link compiledModule.exports} will contain the script's exports.
+   * i.e. {@link module.exports} will contain the script's exports.
    */
-  const compiledModule = new Module(file)
+  const module = new mod.Module(file)
 
   const context = vm.createContext({
-    module: compiledModule,
-    exports: compiledModule.exports,
-    require: compiledModule.require,
+    module: module,
+    exports: module.exports,
+    require: module.require,
     __filename: file,
     __dirname: path.dirname(file),
   })
 
   const result = script.runInContext(context)
 
-  return {
-    result,
-    exports: compiledModule.exports,
-  }
+  return { result, module }
 }

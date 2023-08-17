@@ -29,7 +29,9 @@
   "bin": {},
   "exports": {},
   "files": [],
-  "scripts": {},
+  "scripts": {
+    "test": "vitest"
+  },
   "publishConfig": {
     "access": "public"
   },
