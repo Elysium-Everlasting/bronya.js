@@ -87,6 +87,10 @@ importers:
         version: 1.0.0-rc.4(@algolia/client-search@4.19.1)(@types/node@20.4.5)(search-insights@2.7.0)
 
   packages/core:
+    dependencies:
+      aws-cdk-lib:
+        specifier: ^2.92.0
+        version: 2.92.0(constructs@10.2.69)
     devDependencies:
       esbuild:
         specifier: ^0.19.2
@@ -299,6 +303,27 @@ packages:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.19
     dev: true
+
+  /@aws-cdk/asset-awscli-v1@2.2.200:
+    resolution:
+      {
+        integrity: sha512-Kf5J8DfJK4wZFWT2Myca0lhwke7LwHcHBo+4TvWOGJrFVVKVuuiLCkzPPRBQQVDj0Vtn2NBokZAz8pfMpAqAKg==,
+      }
+    dev: false
+
+  /@aws-cdk/asset-kubectl-v20@2.1.2:
+    resolution:
+      {
+        integrity: sha512-3M2tELJOxQv0apCIiuKQ4pAbncz9GuLwnKFqxifWfe77wuMxyTRPmxssYHs42ePqzap1LT6GDcPygGs+hHstLg==,
+      }
+    dev: false
+
+  /@aws-cdk/asset-node-proxy-agent-v6@2.0.1:
+    resolution:
+      {
+        integrity: sha512-DDt4SLdLOwWCjGtltH4VCST7hpOI5DzieuhGZsBpZ+AgJdSI2GCjklCXm0GCTwJG/SolkL5dtQXyUKgg9luBDg==,
+      }
+    dev: false
 
   /@babel/code-frame@7.22.5:
     resolution:
@@ -2586,6 +2611,32 @@ packages:
     engines: { node: '>= 0.4' }
     dev: true
 
+  /aws-cdk-lib@2.92.0(constructs@10.2.69):
+    resolution:
+      {
+        integrity: sha512-J+SUFSnOt9u2GbY5QIABgjGNiw8bL/v0S3zsPhhO1dVwK+G7oE+bhLcAi3iILrw2sIpirNWH9K3W0by9K+cyMw==,
+      }
+    engines: { node: '>= 14.15.0' }
+    peerDependencies:
+      constructs: ^10.0.0
+    dependencies:
+      '@aws-cdk/asset-awscli-v1': 2.2.200
+      '@aws-cdk/asset-kubectl-v20': 2.1.2
+      '@aws-cdk/asset-node-proxy-agent-v6': 2.0.1
+      constructs: 10.2.69
+    dev: false
+    bundledDependencies:
+      - '@balena/dockerignore'
+      - case
+      - fs-extra
+      - ignore
+      - jsonschema
+      - minimatch
+      - punycode
+      - semver
+      - table
+      - yaml
+
   /balanced-match@1.0.2:
     resolution:
       {
@@ -2967,6 +3018,14 @@ packages:
         integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==,
       }
     dev: true
+
+  /constructs@10.2.69:
+    resolution:
+      {
+        integrity: sha512-0AiM/uQe5Uk6JVe/62oolmSN2MjbFQkOlYrM3fFGZLKuT+g7xlAI10EebFhyCcZwI2JAcWuWCmmCAyCothxjuw==,
+      }
+    engines: { node: '>= 16.14.0' }
+    dev: false
 
   /conventional-changelog-angular@5.0.13:
     resolution:
