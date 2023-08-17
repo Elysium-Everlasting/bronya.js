@@ -30,7 +30,8 @@
     "postinstall": "changeset init && husky install",
     "format": "prettier --write --cache .",
     "lint": "eslint --cache .",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "test": "vitest"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
