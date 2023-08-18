@@ -4,6 +4,11 @@ import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import { Construct } from 'constructs'
 import type { BuildOptions } from 'esbuild'
+// import { findConfigFile, loadAppFromConfig } from './config.js'
+// import type { DeepPartial } from './utils/deep-partial.js'
+// import { getNamedExports } from './utils/static-analysis.js'
+// import { findAllProjects, getWorkspaceRoot } from './utils/project.js'
+// import { warmerRequestBody } from '../../dev/lambda/constants'
 
 /**
  * The root API construct can configure the follow settings as defaults for all routes.

@@ -101,12 +101,21 @@ importers:
 
   packages/core:
     dependencies:
+      acorn:
+        specifier: ^8.10.0
+        version: 8.10.0
+      acorn-typescript:
+        specifier: ^1.4.1
+        version: 1.4.1(acorn@8.10.0)
       aws-cdk-lib:
         specifier: ^2.92.0
         version: 2.92.0(constructs@10.2.69)
       constructs:
         specifier: ^10.2.69
         version: 10.2.69
+      defu:
+        specifier: ^6.1.2
+        version: 6.1.2
       express:
         specifier: ^4.18.2
         version: 4.18.2
@@ -114,6 +123,9 @@ importers:
         specifier: ^1.19.1
         version: 1.19.1
     devDependencies:
+      '@types/estree':
+        specifier: ^1.0.1
+        version: 1.0.1
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
@@ -2753,6 +2765,17 @@ packages:
       acorn: 8.10.0
     dev: true
 
+  /acorn-typescript@1.4.1(acorn@8.10.0):
+    resolution:
+      {
+        integrity: sha512-NUkViIdanX5BZLJmmyZdlcG+3hcWCziO/bhYSuZ/8uoupkz8fB97S6XkkQrtuumaX/2OHtMyLl+Lw3f+Obm21g==,
+      }
+    peerDependencies:
+      acorn: '>=8.9.0'
+    dependencies:
+      acorn: 8.10.0
+    dev: false
+
   /acorn-walk@8.2.0:
     resolution:
       {
@@ -2768,7 +2791,6 @@ packages:
       }
     engines: { node: '>=0.4.0' }
     hasBin: true
-    dev: true
 
   /ajv@6.12.6:
     resolution:
@@ -3920,6 +3942,13 @@ packages:
       has-property-descriptors: 1.0.0
       object-keys: 1.1.1
     dev: true
+
+  /defu@6.1.2:
+    resolution:
+      {
+        integrity: sha512-+uO4+qr7msjNNWKYPHqN/3+Dx3NFkmIzayk2L1MyZQlvgZb/J1A0fo410dpKrN2SnqFjt8n4JL8fDJE0wIgjFQ==,
+      }
+    dev: false
 
   /depd@2.0.0:
     resolution:
