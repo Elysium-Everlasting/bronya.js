@@ -1,6 +1,7 @@
 {
   "name": "@klein.js/examples-basic-api-route-a",
   "version": "0.1.0",
+  "private": true,
   "devDependencies": {
     "@types/aws-lambda": "^8.10.119"
   }
