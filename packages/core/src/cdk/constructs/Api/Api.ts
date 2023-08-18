@@ -1,14 +1,19 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
 import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as aws_events from 'aws-cdk-lib/aws-events'
 import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
+import * as aws_core from 'aws-cdk-lib/core'
 import { Construct } from 'constructs'
+import { defu } from 'defu'
 import type { BuildOptions } from 'esbuild'
-// import { findConfigFile, loadAppFromConfig } from '../../../config.js'
-// import type { DeepPartial } from '../../../utils/deep-partial.js'
-// import { getNamedExports } from '../../../utils/static-analysis.js'
-// import { findAllProjects, getWorkspaceRoot } from '../../../utils/project.js'
-// import { warmerRequestBody } from './constants.js'
+
+import { findConfigFile, loadAppFromConfig } from '../../../config.js'
+import type { DeepPartial } from '../../../utils/deep-partial.js'
+import { findAllProjects, getWorkspaceRoot } from '../../../utils/project.js'
+import { getNamedExports } from '../../../utils/static-analysis.js'
 
 /**
  * The root API construct can configure the follow settings as defaults for all routes.
@@ -156,4 +161,126 @@ export class Api extends Construct {
 
     this.config = config
   }
+
+  async init() {
+    const workspaceRoot = getWorkspaceRoot()
+
+    const apiRoutesDirectory = path.resolve(workspaceRoot, this.config.directory)
+
+    const projects = findAllProjects(apiRoutesDirectory)
+
+    await Promise.all(
+      projects.map(async (directory) => {
+        const configFile = findConfigFile(directory)
+
+        if (!configFile) {
+          const entryPoint = path.resolve(directory, this.config.entryPoint ?? 'src/index.ts')
+
+          const exitPoint = this.config.exitPoint ?? path.parse(entryPoint).name
+
+          const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
+
+          const outDirectory = path.resolve(directory, this.config.outDirectory ?? 'dist')
+
+          const endpoint = path.relative(path.resolve(workspaceRoot, apiRoutesDirectory), directory)
+
+          this.routes[directory] = {
+            directory,
+            endpoint,
+            entryPoint,
+            exitPoint,
+            methods,
+            outDirectory,
+            esbuild: this.config.esbuild,
+            environment: this.config.environment,
+            constructs: this.config.constructs,
+          }
+
+          return
+        }
+
+        /**
+         * Load the app from the current project.
+         */
+        const app = await loadAppFromConfig(directory)
+
+        const apiOverride = await getApiOverride(app)
+
+        const mergedProps = defu(apiOverride?.config, this.config)
+
+        const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? 'src/index.ts')
+
+        const exitPoint = mergedProps.exitPoint ?? path.parse(entryPoint).name
+
+        const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
+
+        const outDirectory = path.resolve(directory, mergedProps.outDirectory ?? 'dist')
+
+        const endpoint = path.relative(path.resolve(workspaceRoot, apiRoutesDirectory), directory)
+
+        this.routes[directory] = {
+          directory,
+          endpoint,
+          entryPoint,
+          exitPoint,
+          methods,
+          outDirectory,
+          esbuild: mergedProps.esbuild,
+          environment: mergedProps.environment,
+          constructs: mergedProps.constructs,
+        }
+      }),
+    )
+  }
+}
+
+/**
+ * A special construct that overrides the default settings set by {@link Api} for a specific API route.
+ * Create a `klein.config.ts` file and create an {@link aws_core.App} as usual, but with this construct to override.
+ */
+export class ApiPropsOverride extends Construct {
+  public static readonly type = 'api-props-override' as const
+
+  public readonly type = ApiPropsOverride.type
+
+  /**
+   * Used on initialized constructs, i.e. part of a node's children, to determine if they are of this type.
+   */
+  public static isApiRouteConfigOverride(x: unknown): x is ApiPropsOverride {
+    return Construct.isConstruct(x) && 'type' in x && x['type'] === ApiPropsOverride.type
+  }
+
+  public config: DeepPartial<ApiProps>
+
+  constructor(scope: Construct, id: string, config: DeepPartial<ApiProps> = {}) {
+    super(scope, id)
+
+    this.config = config
+  }
+}
+
+export async function getApiOverride(
+  initializedApp?: aws_core.App,
+): Promise<ApiPropsOverride | undefined> {
+  const app = initializedApp ?? (await loadAppFromConfig())
+
+  const stacks = app.node.children.filter(aws_core.Stack.isStack)
+
+  if (!stacks) {
+    throw new Error(`No stacks found.`)
+  }
+
+  const stackWithApiOverride = stacks.find((stack) =>
+    stack.node.children.some(ApiPropsOverride.isApiRouteConfigOverride),
+  )
+
+  const apiOverride = stackWithApiOverride?.node.children.find(
+    ApiPropsOverride.isApiRouteConfigOverride,
+  )
+
+  if (!apiOverride) {
+    return undefined
+  }
+
+  return apiOverride
 }

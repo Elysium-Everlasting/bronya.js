@@ -53,7 +53,7 @@ export async function loadAppFromConfig(directory = workspaceRoot) {
     throw new Error('Config did not return an instance of a CDK App')
   }
 
-  return exports
+  return maybeApp
 }
 
 /**
