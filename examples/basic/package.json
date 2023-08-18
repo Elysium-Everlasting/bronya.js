@@ -1,0 +1,14 @@
+{
+  "name": "@klein.js/example-basic",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@klein.js/core": "workspace:^",
+    "aws-cdk-lib": "^2.92.0"
+  },
+  "devDependencies": {
+    "tsx": "^3.12.7"
+  }
+}
