@@ -1,10 +1,16 @@
 import path from 'node:path'
 
+import type {
+  APIGatewayProxyHandler,
+  APIGatewayProxyCallback,
+  APIGatewayProxyEvent,
+  Context,
+} from 'aws-lambda'
 import bodyParser from 'body-parser'
 import chokidar from 'chokidar'
 import { consola } from 'consola'
 import cors from 'cors'
-import express, { Router } from 'express'
+import express, { Router, type Handler } from 'express'
 
 import { getClosestProjectDirectory, getWorkspaceRoot } from '../../../utils/project.js'
 
@@ -14,7 +20,7 @@ import { buildApiRoute } from './build.js'
 /**
  * Translates the HTTP verbs for API Gateway into ExpressJS methods.
  */
-export const MethodsToExpress = {
+const HttpMethodsToExpress = {
   DELETE: 'delete',
   GET: 'get',
   HEAD: 'head',
@@ -25,10 +31,123 @@ export const MethodsToExpress = {
   ANY: 'use',
 } as const
 
-export type Method = keyof typeof MethodsToExpress
+type Method = keyof typeof HttpMethodsToExpress
 
-export function isMethod(method: string): method is keyof typeof MethodsToExpress {
-  return method in MethodsToExpress
+function isMethod(method: string): method is keyof typeof HttpMethodsToExpress {
+  return method in HttpMethodsToExpress
+}
+
+function noop() {
+  /* noop */
+}
+
+function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
+  return async (req, res, next) => {
+    const callback: APIGatewayProxyCallback = (error, response) => {
+      if (error) {
+        next(error)
+        return
+      }
+
+      if (response == null) {
+        next(new Error('No response from handler'))
+        return
+      }
+
+      res.status(response.statusCode ?? 200).json(response.body)
+    }
+
+    const event: APIGatewayProxyEvent = {
+      body: req.body,
+      get headers() {
+        // req.headers
+        return {}
+      },
+      get multiValueHeaders() {
+        return {}
+      },
+      httpMethod: req.method,
+      get isBase64Encoded() {
+        return false
+      },
+      path: req.path,
+      pathParameters: req.params,
+      get queryStringParameters() {
+        // req.query,
+        return {}
+      },
+      get multiValueQueryStringParameters() {
+        return {}
+      },
+      stageVariables: null,
+      requestContext: {
+        accountId: '',
+        apiId: '',
+        authorizer: {},
+        protocol: '',
+        httpMethod: req.method,
+        identity: {
+          accessKey: null,
+          accountId: null,
+          apiKey: null,
+          apiKeyId: null,
+          caller: null,
+          clientCert: null,
+          cognitoAuthenticationProvider: null,
+          cognitoAuthenticationType: null,
+          cognitoIdentityId: null,
+          cognitoIdentityPoolId: null,
+          principalOrgId: null,
+          sourceIp: '',
+          user: null,
+          userAgent: null,
+          userArn: null,
+        },
+        path: req.path,
+        stage: '',
+        requestId: '',
+        requestTimeEpoch: 0,
+        resourceId: '',
+        resourcePath: '',
+      },
+      resource: '',
+    }
+
+    const context: Context = {
+      callbackWaitsForEmptyEventLoop: true,
+      functionName: '',
+      functionVersion: '',
+      invokedFunctionArn: '',
+      memoryLimitInMB: '',
+      awsRequestId: '',
+      logGroupName: '',
+      logStreamName: '',
+      identity: undefined,
+
+      getRemainingTimeInMillis() {
+        return 69
+      },
+
+      done: noop,
+      fail: noop,
+      succeed: noop,
+    }
+
+    const result = await handler(event, context, callback)
+
+    if (!result) {
+      return
+    }
+
+    res.status(result.statusCode)
+    res.set(result.headers)
+
+    try {
+      res.send(JSON.parse(result.body))
+    } catch {
+      res.send(result.body)
+    }
+  }
 }
 
 /**
@@ -59,26 +178,18 @@ export async function startApiDevelopmentExpress(api: Api) {
 
   const apiRoutes = Object.values(api.routes)
 
-  //---------------------------------------------------------------------------------
-  // Build.
-  //---------------------------------------------------------------------------------
-
   /**
    * Build all endpoints.
    */
   await Promise.all(
-    apiRoutes.map(async (apiRoute) => {
-      consola.info(`🔨 Building ${apiRoute.directory} to ${apiRoute.outDirectory}`)
+    apiRoutes.map(async (apiRouteInfo) => {
+      consola.info(`🔨 Building ${apiRouteInfo.directory} to ${apiRouteInfo.outDirectory}`)
 
-      buildApiRoute(api, apiRoute.directory)
+      await buildApiRoute(apiRouteInfo)
 
-      consola.info(`✅ Done building ${apiRoute.directory} to ${apiRoute.outDirectory}`)
+      consola.info(`✅ Done building ${apiRouteInfo.directory} to ${apiRouteInfo.outDirectory}`)
     }),
   )
-
-  //---------------------------------------------------------------------------------
-  // Express development server.
-  //---------------------------------------------------------------------------------
 
   const app = express()
 
@@ -102,40 +213,55 @@ export async function startApiDevelopmentExpress(api: Api) {
    */
   const refreshRouter = () => {
     router = Router()
-    apiRoutes.forEach((apiRoute) => {
-      consola.info(`🔄 Loading /${apiRoute.endpoint} from ${apiRoute.outDirectory}`)
-      router.use(`/${apiRoute.endpoint}`, (...args) => routers[apiRoute.directory]?.(...args))
+    apiRoutes.forEach((apiRouteInfo) => {
+      consola.info(`🔄 Loading /${apiRouteInfo.endpoint} from ${apiRouteInfo.outDirectory}`)
+
+      const apiRouteRouter = routers[apiRouteInfo.directory]
+
+      if (apiRouteRouter) {
+        router.use(apiRouteRouter)
+      }
     })
   }
 
   /**
    * Load a specific endpoint's middleware.
    */
-  const loadEndpoint = async (apiRoute: RouteInfo) => {
-    consola.info(`⚙  Setting up router for ${apiRoute.endpoint}`)
+  const loadEndpoint = async (apiRouteInfo: RouteInfo) => {
+    consola.info(`⚙  Setting up router for ${apiRouteInfo.endpoint}`)
 
-    routers[apiRoute.directory] = Router()
+    routers[apiRouteInfo.directory] = Router()
 
     const file = path.resolve(
-      apiRoute.directory,
-      apiRoute.outDirectory,
-      apiRoute.runtime.indexRuntimeFile,
+      apiRouteInfo.directory,
+      apiRouteInfo.outDirectory,
+      apiRouteInfo.exitPoint,
     )
 
     const internalHandlers = await import(`${file}?update=${Date.now()}`)
 
     if (internalHandlers == null) {
-      consola.error(`🚨 Failed to load ${apiRoute.directory}. No exports found.`)
+      consola.error(`🚨 Failed to load ${apiRouteInfo.directory}. No exports found.`)
       return
     }
 
     const handlerFunctions = internalHandlers.default ?? internalHandlers
 
     Object.entries(handlerFunctions)
-      .filter((entry): entry is [Method, InternalHandler] => isMethod(entry[0]))
-      .map(([key, handler]) => [MethodsToExpress[key], handler] as const)
-      .forEach(([method, handler]) => {
-        routers[apiRoute.directory][method]('/', createExpressHandler(handler))
+      .filter((entry): entry is [Method, APIGatewayProxyHandler] => isMethod(entry[0]))
+      .forEach(([httpMethod, handler]) => {
+        const expressMethod = HttpMethodsToExpress[httpMethod]
+        const apiRouteRouter = routers[apiRouteInfo.directory]
+
+        if (apiRouteRouter == null) {
+          consola.error(`🚨 Failed to load ${apiRouteInfo.directory}. No router found.`)
+          return
+        }
+
+        /**
+         * @example `router.get('/v1/rest/endpoint', wrapExpressHandler(handler))`
+         */
+        apiRouteRouter[expressMethod](apiRouteInfo.endpoint, wrapExpressHandler(handler))
       })
   }
 
@@ -174,8 +300,17 @@ export async function startApiDevelopmentExpress(api: Api) {
 
     consola.success('✨ endpoint changed: ', endpoint)
 
-    await build(api.routes[endpoint]?.esbuild ?? {})
+    const apiRouteInfo = api.routes[endpoint]
 
-    await loadEndpoint(api.routes[endpoint]).then(refreshRouter)
+    if (apiRouteInfo == null) {
+      consola.error(`🚨 Failed to load ${endpoint}. No router found.`)
+      return
+    }
+
+    await buildApiRoute(apiRouteInfo)
+
+    await loadEndpoint(apiRouteInfo)
+
+    refreshRouter()
   })
 }

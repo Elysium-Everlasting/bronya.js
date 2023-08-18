@@ -135,6 +135,9 @@ importers:
         specifier: ^1.19.1
         version: 1.19.1
     devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
       '@types/body-parser':
         specifier: ^1.19.2
         version: 1.19.2
@@ -2083,6 +2086,13 @@ packages:
         integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==,
       }
     requiresBuild: true
+    dev: true
+
+  /@types/aws-lambda@8.10.119:
+    resolution:
+      {
+        integrity: sha512-Vqm22aZrCvCd6I5g1SvpW151jfqwTzEZ7XJ3yZ6xaZG31nUEOEyzzVImjRcsN8Wi/QyPxId/x8GTtgIbsy8kEw==,
+      }
     dev: true
 
   /@types/body-parser@1.19.2:
