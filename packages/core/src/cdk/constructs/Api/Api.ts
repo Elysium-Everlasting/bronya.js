@@ -21,6 +21,8 @@ export interface ApiProps {
 
   /**
    * The file exporting API handlers. Relative from {@link directory}.
+   *
+   * @example src/index.ts
    */
   entryPoint: string
 
@@ -30,70 +32,21 @@ export interface ApiProps {
   outDirectory: string
 
   /**
-   * Controls how the output files are generated.
+   * The built output file, relative from {@link outDirectory}, **excluding the extension**.
+   *
+   * @default path.basename of {@link entryPoint} without the 'js' extension.
    */
-  runtime: ApiRuntimeOptions
+  exitPoint: string
 
   /**
    * Controls how/what AWS constructs are created.
    */
   constructs?: ApiConstructProps | null | void
-}
 
-/**
- * Controls how the output files are generated.
- */
-export interface ApiRuntimeOptions {
   /**
    * ESBuild options.
    */
   esbuild: BuildOptions
-
-  /**
-   * Name of the built entry file. It's temporary and used to create the specific runtime files.
-   *
-   * @default "index.js"
-   */
-  indexRuntimeFile: string
-
-  /**
-   * Name of dynamically generated script for AWS Lambda's NodeJS runtime.
-   *
-   * @default "lambda-node-runtime.js"
-   *
-   * @example
-   *
-   * ```js
-   * import { handler } from "./lambda-node-runtime.js"
-   * ```
-   */
-  nodeRuntimeFile: string
-
-  /**
-   * Name of dynamically generated script for AWS Lambda's Bun runtime.
-   *
-   * @default "lambda-bun-runtime.js"
-   *
-   * @example
-   *
-   * ```js
-   * import { handler } from "./lambda-bun-runtime.js"
-   * ```
-   */
-  bunRuntimeFile: string
-
-  /**
-   * What to name the imported handlers from the built entry file.
-   *
-   * @default InternalHandlers
-   *
-   * @example
-   *
-   * ```js
-   * import * as InternalHandlers from "./dist/index.js"
-   * ```
-   */
-  entryHandlersName: string
 
   /**
    * Environment variables to pass to the Lambda Function.
@@ -194,13 +147,13 @@ export class Api extends Construct {
     return Construct.isConstruct(x) && 'type' in x && x['type'] === Api.type
   }
 
+  public readonly config: ApiProps
+
   routes: Record<string, RouteInfo> = {}
 
-  constructor(
-    scope: Construct,
-    id: string,
-    readonly config: ApiProps,
-  ) {
+  constructor(scope: Construct, id: string, config: ApiProps) {
     super(scope, id)
+
+    this.config = config
   }
 }
