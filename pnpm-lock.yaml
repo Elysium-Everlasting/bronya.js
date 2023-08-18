@@ -99,6 +99,24 @@ importers:
         specifier: ^3.12.7
         version: 3.12.7
 
+  examples/basic/src/api/a:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+
+  examples/basic/src/api/b:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+
+  examples/basic/src/api/c:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+
   packages/core:
     dependencies:
       acorn:

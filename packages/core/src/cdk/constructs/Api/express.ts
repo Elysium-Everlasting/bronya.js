@@ -12,7 +12,7 @@ import { consola } from 'consola'
 import cors from 'cors'
 import express, { Router, type Handler } from 'express'
 
-import { getClosestProjectDirectory, getWorkspaceRoot } from '../../../utils/project.js'
+import { getClosestProjectDirectory } from '../../../utils/project.js'
 
 import type { Api, RouteInfo } from './Api.js'
 import { buildApiRoute } from './build.js'
@@ -154,24 +154,17 @@ function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
  * Start an ExpressJS server for the API construct.
  */
 export async function startApiDevelopmentExpress(api: Api) {
-  if (!('directory' in api.config)) {
-    throw new Error(`TODO: explicitly routed API is not supported yet.`)
-  }
+  const currentProject = getClosestProjectDirectory()
 
-  const cwd = process.cwd()
-
-  const workspaceRoot = getWorkspaceRoot(cwd)
-
-  if (cwd === workspaceRoot) {
+  if (api.root === currentProject) {
     consola.info(
       `🎏 Starting root dev server. All endpoints from ${api.config.directory} will be served.`,
     )
   } else {
-    const endpoint = path.relative(`${workspaceRoot}/${api.config.directory}`, cwd)
     consola.info(
-      `🎏 Starting local dev server. Only the current endpoint, ${endpoint} will be served at the "/" route.`,
+      `🎏 Starting local dev server. Only the current endpoint, ${currentProject} will be served at the "/" route.`,
     )
-    api.config.directory = path.resolve(process.cwd())
+    api.config.directory = path.resolve(currentProject)
   }
 
   const apiRoutePaths = Object.keys(api.routes)
@@ -213,8 +206,9 @@ export async function startApiDevelopmentExpress(api: Api) {
    */
   const refreshRouter = () => {
     router = Router()
+
     apiRoutes.forEach((apiRouteInfo) => {
-      consola.info(`🔄 Loading /${apiRouteInfo.endpoint} from ${apiRouteInfo.outDirectory}`)
+      consola.info(`🔄 Loading ${apiRouteInfo.endpoint} from ${apiRouteInfo.outDirectory}`)
 
       const apiRouteRouter = routers[apiRouteInfo.directory]
 
@@ -251,12 +245,15 @@ export async function startApiDevelopmentExpress(api: Api) {
       .filter((entry): entry is [Method, APIGatewayProxyHandler] => isMethod(entry[0]))
       .forEach(([httpMethod, handler]) => {
         const expressMethod = HttpMethodsToExpress[httpMethod]
+
         const apiRouteRouter = routers[apiRouteInfo.directory]
 
         if (apiRouteRouter == null) {
           consola.error(`🚨 Failed to load ${apiRouteInfo.directory}. No router found.`)
           return
         }
+
+        console.log(`Route loaded: ${expressMethod}: ${apiRouteInfo.endpoint}`)
 
         /**
          * @example `router.get('/v1/rest/endpoint', wrapExpressHandler(handler))`
@@ -280,7 +277,7 @@ export async function startApiDevelopmentExpress(api: Api) {
   })
 
   const outputDirectories = apiRoutes.map((apiRoute) =>
-    path.resolve(workspaceRoot, apiRoute.directory, apiRoute.outDirectory),
+    path.resolve(currentProject, apiRoute.directory, apiRoute.outDirectory),
   )
 
   //---------------------------------------------------------------------------------

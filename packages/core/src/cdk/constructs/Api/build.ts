@@ -12,7 +12,7 @@ export async function buildApiRoute(apiRouteConfig: RouteInfo) {
   }
 
   esbuildOptions.entryPoints ??= {
-    [apiRouteConfig.exitPoint]: apiRouteConfig.entryPoint,
+    [apiRouteConfig.exitPoint.replace(/.js$/, '')]: apiRouteConfig.entryPoint,
   }
 
   const buildOutput = await build(esbuildOptions)

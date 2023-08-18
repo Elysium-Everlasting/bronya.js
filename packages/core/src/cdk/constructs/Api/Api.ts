@@ -12,7 +12,7 @@ import type { BuildOptions } from 'esbuild'
 
 import { findConfigFile, loadAppFromConfig } from '../../../config.js'
 import type { DeepPartial } from '../../../utils/deep-partial.js'
-import { findAllProjects, getWorkspaceRoot } from '../../../utils/project.js'
+import { findAllProjects, getClosestProjectDirectory } from '../../../utils/project.js'
 import { getNamedExports } from '../../../utils/static-analysis.js'
 
 /**
@@ -20,7 +20,12 @@ import { getNamedExports } from '../../../utils/static-analysis.js'
  */
 export interface ApiProps {
   /**
-   * The project root (where the `package.json` is located).
+   * The root of where to define API routes relative to.
+   */
+  root?: string
+
+  /**
+   * Directory to look for API routes, i.e. sub-projects. Relative from {@link root}.
    */
   directory: string
 
@@ -51,12 +56,12 @@ export interface ApiProps {
   /**
    * ESBuild options.
    */
-  esbuild: BuildOptions
+  esbuild?: BuildOptions
 
   /**
    * Environment variables to pass to the Lambda Function.
    */
-  environment: Record<string, string>
+  environment?: Record<string, string>
 }
 
 /**
@@ -152,6 +157,8 @@ export class Api extends Construct {
     return Construct.isConstruct(x) && 'type' in x && x['type'] === Api.type
   }
 
+  public root: string
+
   public readonly config: ApiProps
 
   routes: Record<string, RouteInfo> = {}
@@ -160,12 +167,12 @@ export class Api extends Construct {
     super(scope, id)
 
     this.config = config
+
+    this.root = config.root ?? getClosestProjectDirectory()
   }
 
   async init() {
-    const workspaceRoot = getWorkspaceRoot()
-
-    const apiRoutesDirectory = path.resolve(workspaceRoot, this.config.directory)
+    const apiRoutesDirectory = path.resolve(this.root, this.config.directory)
 
     const projects = findAllProjects(apiRoutesDirectory)
 
@@ -176,13 +183,16 @@ export class Api extends Construct {
         if (!configFile) {
           const entryPoint = path.resolve(directory, this.config.entryPoint ?? 'src/index.ts')
 
-          const exitPoint = this.config.exitPoint ?? path.parse(entryPoint).name
+          const exitPoint = this.config.exitPoint ?? path.basename(entryPoint)
 
           const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
 
           const outDirectory = path.resolve(directory, this.config.outDirectory ?? 'dist')
 
-          const endpoint = path.relative(path.resolve(workspaceRoot, apiRoutesDirectory), directory)
+          const endpoint = path.join(
+            '/',
+            path.relative(path.resolve(this.root, apiRoutesDirectory), directory),
+          )
 
           this.routes[directory] = {
             directory,
@@ -210,13 +220,16 @@ export class Api extends Construct {
 
         const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? 'src/index.ts')
 
-        const exitPoint = mergedProps.exitPoint ?? path.parse(entryPoint).name
+        const exitPoint = mergedProps.exitPoint ?? path.basename(entryPoint)
 
         const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
 
         const outDirectory = path.resolve(directory, mergedProps.outDirectory ?? 'dist')
 
-        const endpoint = path.relative(path.resolve(workspaceRoot, apiRoutesDirectory), directory)
+        const endpoint = path.join(
+          '/',
+          path.relative(path.resolve(this.root, apiRoutesDirectory), directory),
+        )
 
         this.routes[directory] = {
           directory,
@@ -225,8 +238,8 @@ export class Api extends Construct {
           exitPoint,
           methods,
           outDirectory,
-          esbuild: mergedProps.esbuild,
-          environment: mergedProps.environment,
+          esbuild: mergedProps.esbuild ?? undefined,
+          environment: mergedProps.environment ?? undefined,
           constructs: mergedProps.constructs,
         }
       }),
