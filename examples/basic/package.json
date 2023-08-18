@@ -1,6 +1,7 @@
 {
   "name": "@klein.js/example-basic",
   "version": "0.1.0",
+  "private": true,
   "scripts": {
     "dev": "tsx src/index.ts"
   },
