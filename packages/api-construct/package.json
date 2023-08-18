@@ -1,7 +1,7 @@
 {
-  "name": "@klein.js/core",
+  "name": "@klein.js/api-construct",
   "version": "0.1.1",
-  "description": "devOPs tool",
+  "description": "api construct",
   "private": true,
   "license": "MIT",
   "homepage": "https://elysium-everlasting.github.io/klein.js",
@@ -16,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Elysium-Everlasting/klein.js",
-    "directory": "packages/villv"
+    "directory": "packages/api-construct"
   },
   "bugs": {
     "url": "https://github.com/Elysium-Everlasting/klein.js/issues"
@@ -27,38 +27,18 @@
   ],
   "type": "module",
   "bin": {},
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.js"
-    },
     "./api": {
       "types": "./dist/api.d.ts",
       "import": "./dist/api.js",
       "require": "./dist/api.cjs",
       "default": "./dist/api.js"
-    },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "import": "./dist/utils.js",
-      "require": "./dist/utils.cjs",
-      "default": "./dist/utils.js"
     }
   },
   "typesVersion": {
     "*": {
-      ".": [
-        "dist/index.d.ts"
-      ],
       "./api": [
         "dist/api.d.ts"
-      ],
-      "./utils": [
-        "dist/utils.d.ts"
       ]
     }
   },
@@ -69,6 +49,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@klein.js/core": "workspace:^",
     "acorn": "^8.10.0",
     "acorn-typescript": "^1.4.1",
     "aws-cdk-lib": "^2.92.0",
