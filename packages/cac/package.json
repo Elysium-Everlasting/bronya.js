@@ -1,0 +1,70 @@
+{
+  "name": "@klein.js/cac",
+  "version": "0.1.1",
+  "description": "api construct",
+  "private": true,
+  "license": "MIT",
+  "homepage": "https://elysium-everlasting.github.io/klein.js",
+  "funding": "https://github.com/Elysium-Everlasting/klein.js",
+  "contributors": [
+    {
+      "name": "ap0nia",
+      "email": "",
+      "url": "https://github.com/ap0nia"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Elysium-Everlasting/klein.js",
+    "directory": "packages/api-construct"
+  },
+  "bugs": {
+    "url": "https://github.com/Elysium-Everlasting/klein.js/issues"
+  },
+  "keywords": [
+    "aws",
+    "cdk"
+  ],
+  "type": "module",
+  "bin": {},
+  "exports": {},
+  "typesVersion": {},
+  "files": [],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@klein.js/core": "workspace:^",
+    "acorn": "^8.10.0",
+    "acorn-typescript": "^1.4.1",
+    "aws-cdk-lib": "^2.92.0",
+    "body-parser": "^1.20.2",
+    "chokidar": "^3.5.3",
+    "consola": "^3.2.3",
+    "constructs": "^10.2.69",
+    "cors": "^2.8.5",
+    "defu": "^6.1.2",
+    "express": "^4.18.2",
+    "jiti": "^1.19.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119",
+    "@types/body-parser": "^1.19.2",
+    "@types/cors": "^2.8.13",
+    "@types/estree": "^1.0.1",
+    "@types/express": "^4.17.17",
+    "esbuild": "^0.19.2",
+    "tsup": "^7.2.0",
+    "tsx": "^3.12.7"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@8.6.12",
+  "engines": {
+    "pnpm": "^8.0.0",
+    "node": ">=18"
+  }
+}

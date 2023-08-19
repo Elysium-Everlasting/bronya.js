@@ -335,7 +335,7 @@ function camelcase(str: string): string {
  * @api private
  */
 
-function splitOptionFlags(flags: string): { shortFlag: string; longFlag: string } {
+export function splitOptionFlags(flags: string): { shortFlag: string; longFlag: string } {
   let shortFlag = ''
   let longFlag = ''
 

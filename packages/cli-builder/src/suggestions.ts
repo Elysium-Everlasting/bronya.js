@@ -60,7 +60,7 @@ export function editDistance(a: string, b: string): number {
 /**
  * Find close matches, restricted to same number of edits.
  */
-export function generateSuggestion(word: string, candidates?: string[]): string {
+export function suggestSimilar(word: string, candidates?: string[]): string {
   if (!candidates || candidates.length === 0) {
     return ''
   }

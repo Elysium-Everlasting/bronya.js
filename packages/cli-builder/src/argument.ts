@@ -1,6 +1,6 @@
 import { InvalidArgumentError } from './error.js'
 
-type ArgParser = (arg: string, previous: string) => string | string[]
+export type ArgParser = (arg: string, previous: string) => string | string[]
 
 export class Argument {
   description: string
@@ -76,7 +76,7 @@ export class Argument {
    * Set the default value, and optionally supply the description to be displayed in the help.
    */
 
-  default(value: unknown, description: string): Argument {
+  default(value: unknown, description?: string): Argument {
     this.defaultValue = value
     this.defaultValueDescription = description
     return this
