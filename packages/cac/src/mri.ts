@@ -3,15 +3,18 @@ type Arrayable<T> = T | T[]
 
 type NormalizedAliases = Record<string, string[]>
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MriResult = Record<string, any> & { _: string[] }
+
 export interface MriOptions {
   boolean?: Arrayable<string>
   string?: Arrayable<string>
   alias?: Dict<Arrayable<string>>
-  default?: Dict<any>
+  default?: Dict<unknown>
   unknown?(flag: string): void
 }
 
-export default function mri(args: string[] = [], options: MriOptions = {}) {
+export default function mri(args: string[] = [], options: MriOptions = {}): MriResult {
   const normalizedAliases = options.alias ? transformAliases(options.alias) : undefined
 
   const settings = {
@@ -33,7 +36,7 @@ export default function mri(args: string[] = [], options: MriOptions = {}) {
     })
   }
 
-  const out: Record<string, any> = { _: [] }
+  const out: MriResult = { _: [] }
 
   const keys = options.unknown ? Object.keys(settings.alias ?? {}) : []
 
@@ -71,7 +74,8 @@ export default function mri(args: string[] = [], options: MriOptions = {}) {
       const name = arg.substring(lastDashIndex + 3)
 
       if (options.unknown && !~keys.indexOf(name)) {
-        return options.unknown(arg)
+        options.unknown(arg)
+        return { _: [] }
       }
 
       out[name] = false
@@ -124,7 +128,8 @@ export default function mri(args: string[] = [], options: MriOptions = {}) {
       }
 
       if (options.unknown && !~keys.indexOf(name)) {
-        return options.unknown('-'.repeat(lastDashIndex) + name)
+        options.unknown('-'.repeat(lastDashIndex) + name)
+        return { _: [] }
       }
 
       toVal(out, name, equalsIndex + 1 < keyOrBooleanFlags.length || val, options)
@@ -153,26 +158,26 @@ export default function mri(args: string[] = [], options: MriOptions = {}) {
 /**
  * Idk how this works. :shrug:
  */
-function toVal(out: Record<string, any>, key: string, val: unknown, opts: MriOptions) {
-  let x = out[key]
+function toVal(result: MriResult, key: string, val: unknown, opts: MriOptions) {
+  let x = result[key]
 
-  let next = !!~(opts.string?.indexOf(key) ?? -1)
+  const next = ~(opts.string?.indexOf(key) ?? -1)
     ? val == null || val === true
       ? ''
       : String(val)
     : typeof val === 'boolean'
-      ? val
-      : !!~(opts.boolean?.indexOf(key) ?? -1)
-        ? val === 'false'
-          ? false
-          : val === 'true' || (out['_'].push(((x = Number(val)), x * 0 === 0) ? x : val), !!val)
-        : ((x = Number(val)), x * 0 === 0)
-          ? x
-          : val
+    ? val
+    : ~(opts.boolean?.indexOf(key) ?? -1)
+    ? val === 'false'
+      ? false
+      : val === 'true' || (result['_'].push(((x = Number(val)), x * 0 === 0) ? x : val), !!val)
+    : ((x = Number(val)), x * 0 === 0)
+    ? x
+    : val
 
-  let old = out[key]
+  const old = result[key]
 
-  out[key] = old == null ? next : Array.isArray(old) ? old.concat(next) : [old, next]
+  result[key] = old == null ? next : Array.isArray(old) ? old.concat(next) : [old, next]
 }
 
 function transformAliases(aliases: Dict<Arrayable<string>>): NormalizedAliases {

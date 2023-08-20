@@ -1,8 +1,8 @@
 import { removeBrackets, camelcaseOptionName } from './utils.js'
 
 interface OptionConfig {
-  default?: any
-  type?: any[]
+  default?: unknown
+  type?: unknown[]
 }
 
 export default class Option {
@@ -30,7 +30,7 @@ export default class Option {
   constructor(
     public rawName: string,
     public description: string,
-    config?: OptionConfig
+    config?: OptionConfig,
   ) {
     this.config = Object.assign({}, config)
 
@@ -53,7 +53,7 @@ export default class Option {
       .sort((a, b) => (a.length > b.length ? 1 : -1)) // Sort names
 
     // Use the longest name (last one) as actual option name
-    this.name = this.names[this.names.length - 1]
+    this.name = this.names[this.names.length - 1] ?? ''
 
     if (this.negated && this.config.default == null) {
       this.config.default = true

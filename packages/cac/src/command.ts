@@ -1,7 +1,13 @@
 import CAC from './cac.js'
-import Option, { type OptionConfig } from './option.js'
-import { removeBrackets, parseBrackets, findLongest, padRightIfLongerThan, CACError } from './utils.js'
 import { platformInfo } from './node.js'
+import Option, { type OptionConfig } from './option.js'
+import {
+  removeBrackets,
+  parseBracketedKeys,
+  findLongestString,
+  padRightIfLongerThan,
+  CACError,
+} from './utils.js'
 
 interface HelpSection {
   title?: string
@@ -27,9 +33,9 @@ class Command {
    */
   name: string
 
-  args: ReturnType<typeof parseBrackets>
+  args: ReturnType<typeof parseBracketedKeys>
 
-  commandAction?: (...args: any[]) => any
+  commandAction?: (...args: unknown[]) => unknown
 
   usageText?: string
 
@@ -50,7 +56,7 @@ class Command {
     this.options = []
     this.aliasNames = []
     this.name = removeBrackets(rawName)
-    this.args = parseBrackets(rawName)
+    this.args = parseBracketedKeys(rawName)
     this.examples = []
   }
 
@@ -97,7 +103,7 @@ class Command {
     return this
   }
 
-  action(callback: (...args: any[]) => any) {
+  action(callback: (...args: unknown[]) => unknown) {
     this.commandAction = callback
     return this
   }
@@ -145,7 +151,7 @@ class Command {
     const showCommands = (this.isGlobalCommand || this.isDefaultCommand) && commands.length > 0
 
     if (showCommands) {
-      const longestCommandName = findLongest(commands.map((command) => command.rawName))
+      const longestCommandName = findLongestString(commands.map((command) => command.rawName))
       sections.push({
         title: 'Commands',
         body: commands
@@ -171,7 +177,7 @@ class Command {
     }
 
     if (options.length > 0) {
-      const longestOptionName = findLongest(options.map((option) => option.rawName))
+      const longestOptionName = findLongestString(options.map((option) => option.rawName))
 
       sections.push({
         title: 'Options',

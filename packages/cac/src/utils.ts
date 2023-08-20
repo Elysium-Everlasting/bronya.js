@@ -1,41 +1,64 @@
-import type { MriOptions } from './mri.js'
+import type { MriOptions, MriResult } from './mri.js'
 import Option from './option.js'
 
-const ANGLED_BRACKET_REGEX_GLOBAL = /<([^>]+)>/g
+const ANGLE_BRACKET_REGEX_GLOBAL = /<([^>]+)>/g
 
 const SQUARE_BRACKET_REGEX_GLOBAL = /\[([^\]]+)\]/g
 
-export function parseBrackets(str: string): ParseResult[] {
-  const parseResults: ParseResult[] = []
-
-  let angledMatch: string[] | null
-
-  while ((angledMatch = ANGLED_BRACKET_REGEX_GLOBAL.exec(str))) {
-    parseResults.push(parse(angledMatch))
-  }
-
-  let squareMatch: string[] | null
-
-  while ((squareMatch = SQUARE_BRACKET_REGEX_GLOBAL.exec(str))) {
-    parseResults.push(parse(squareMatch))
-  }
-
-  return parseResults
-}
-
-interface ParseResult {
+/**
+ * A bracketed key in a command usage string.
+ *
+ * @example cli-command <required> [optional] [...variadic]
+ */
+export interface BracketedKey {
+  /**
+   * Whether the key is required, i.e. surrounded with angle brackets `<` `>`.
+   */
   required: boolean
-  value?: string
-  variadic?: boolean
+
+  /**
+   * Whether the key is variadic, i.e. starts with `...`.
+   */
+  variadic: boolean
+
+  /**
+   * The key name.
+   */
+  key: string
 }
 
-function parse(match: string[]): ParseResult {
-  const variadic = match[1]?.startsWith('...')
-  const value = variadic ? match[1]?.slice(3) : match[1]
+/**
+ * Parses the string for all bracketed keys.
+ *
+ * Keys surrounded with angle brackets `<` `>` are required.
+ * Keys surrounded with square brackets `[` `]` are optional.
+ * Keys that start with `...` are variadic (i.e. they accept multiple values).
+ */
+export function parseBracketedKeys(str: string): BracketedKey[] {
+  const bracketedKeys: BracketedKey[] = []
+
+  let angleBracketMatches: string[] | null
+
+  while ((angleBracketMatches = ANGLE_BRACKET_REGEX_GLOBAL.exec(str))) {
+    bracketedKeys.push(parseMatches(angleBracketMatches))
+  }
+
+  let squareBracketMatches: string[] | null
+
+  while ((squareBracketMatches = SQUARE_BRACKET_REGEX_GLOBAL.exec(str))) {
+    bracketedKeys.push(parseMatches(squareBracketMatches))
+  }
+
+  return bracketedKeys
+}
+
+function parseMatches(match: string[]): BracketedKey {
+  const variadic = Boolean(match[1]?.startsWith('...'))
+  const value = (variadic ? match[1]?.slice(3) : match[1]) ?? ''
 
   return {
     required: Boolean(match[0]?.startsWith('<')),
-    value,
+    key: value,
     variadic,
   }
 }
@@ -44,12 +67,11 @@ export function removeBrackets(v: string): string {
   return v.replace(/[<[].+/, '').trim()
 }
 
-export const getMriOptions = (options: Option[]) => {
-  const alias: Record<string, string[]> = {}
-
-  const boolean: string[] = []
-
-  const result = { alias, boolean } satisfies MriOptions
+export function getMriOptions(options: Option[]): MriOptions {
+  const mriOptions = {
+    alias: {} as Record<string, string[]>,
+    boolean: [] as string[],
+  } satisfies MriOptions
 
   for (const [index, option] of options.entries()) {
     // We do not set default values in mri options
@@ -63,7 +85,7 @@ export const getMriOptions = (options: Option[]) => {
 
     // Set alias
     if (option.names.length > 1) {
-      result.alias[name] = option.names.slice(1)
+      mriOptions.alias[name] = option.names.slice(1)
     }
 
     if (!option.isBoolean) {
@@ -81,93 +103,93 @@ export const getMriOptions = (options: Option[]) => {
       )
 
       if (!hasStringTypeOption) {
-        result.boolean.push(name)
+        mriOptions.boolean.push(name)
       }
     } else {
-      result.boolean.push(name)
+      mriOptions.boolean.push(name)
     }
   }
 
-  return result
+  return mriOptions
 }
 
-export const findLongest = (arr: string[]) => {
-  return arr.sort((a, b) => {
-    return a.length > b.length ? -1 : 1
-  })[0]
+export function findLongestString(array: string[]): string {
+  const arrayByDecreasingLength = array.sort((a, b) => (a.length > b.length ? -1 : 1))
+  return arrayByDecreasingLength[0] ?? ''
 }
 
-export function padRightIfLongerThan(str: string, length: number) {
+export function padRightIfLongerThan(str: string, length: number): string {
   return str.length >= length ? str : `${str}${' '.repeat(length - str.length)}`
 }
 
-export function camelcase(input: string) {
-  return input.replace(/([a-z])-([a-z])/g, (_, p1, p2) => {
-    return p1 + p2.toUpperCase()
-  })
+export function camelcase(input: string): string {
+  return input.replace(/([a-z])-([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase())
 }
 
-export function setDotProp(obj: { [k: string]: any }, keys: string[], val: any) {
-  let i = 0
-  let length = keys.length
-  let t = obj
-  let x
-  let index: string | undefined
+export function setDotProp(obj: MriResult, keys: string[], val: unknown): void {
+  let current = obj
 
-  for (; i < length; ++i) {
-    index = keys[i]
+  for (let i = 0; i < keys.length; ++i) {
+    const key = keys[i]
 
-    if (index == null) {
+    if (key == null) {
       continue
     }
 
-    x = t[index]
-
-    t = t[index] =
-      i === length - 1
+    current[key] =
+      i === keys.length - 1
         ? val
-        : x != null
-        ? x
-        : !!~index.indexOf('.') || !(Number(keys[i + 1]) > -1)
+        : current[key] != null
+        ? current[key]
+        : !!~key.indexOf('.') || !(Number(keys[i + 1]) > -1)
         ? {}
         : []
+
+    current = current[key]
   }
 }
 
-export function setByType(obj: { [k: string]: any }, transforms: { [k: string]: any }) {
-  for (const key of Object.keys(transforms)) {
+export interface Transformation {
+  shouldTransform?: boolean
+  transformFunction?: (value: unknown) => unknown
+}
+
+export function setByType(obj: MriResult, transforms: Record<string, Transformation>) {
+  Object.keys(transforms).forEach((key) => {
     const transform = transforms[key]
 
-    if (transform.shouldTransform) {
+    if (transform?.shouldTransform) {
       obj[key] = Array.prototype.concat.call([], obj[key])
 
       if (typeof transform.transformFunction === 'function') {
         obj[key] = obj[key].map(transform.transformFunction)
       }
     }
-  }
+  })
 }
 
 export function getFileName(input: string) {
-  const m = /([^\\\/]+)$/.exec(input)
+  const m = /([^\\/]+)$/.exec(input)
   return m ? m[1] : ''
 }
 
+/**
+ * Camelcase the option name.
+ * Don't camelcase anything after the dot `.`
+ */
 export function camelcaseOptionName(name: string) {
-  // Camelcase the option name
-  // Don't camelcase anything after the dot `.`
   return name
     .split('.')
-    .map((v, i) => {
-      return i === 0 ? camelcase(v) : v
-    })
+    .map((v, i) => (i === 0 ? camelcase(v) : v))
     .join('.')
 }
 
 export class CACError extends Error {
   constructor(message: string) {
     super(message)
+
     this.name = this.constructor.name
+
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, this.constructor)
     } else {
