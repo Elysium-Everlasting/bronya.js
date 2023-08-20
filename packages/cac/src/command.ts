@@ -1,19 +1,7 @@
 import CAC from './cac.js'
-import Option, { OptionConfig } from './option.js'
-import {
-  removeBrackets,
-  findAllBrackets,
-  findLongest,
-  padRight,
-  CACError,
-} from './utils'
-import { platformInfo } from './node'
-
-interface CommandArg {
-  required: boolean
-  value: string
-  variadic: boolean
-}
+import Option, { type OptionConfig } from './option.js'
+import { removeBrackets, parseBrackets, findLongest, padRightIfLongerThan, CACError } from './utils.js'
+import { platformInfo } from './node.js'
 
 interface HelpSection {
   title?: string
@@ -31,27 +19,38 @@ type CommandExample = ((bin: string) => string) | string
 
 class Command {
   options: Option[]
+
   aliasNames: string[]
-  /* Parsed command name */
+
+  /*
+   * Parsed command name
+   */
   name: string
-  args: CommandArg[]
+
+  args: ReturnType<typeof parseBrackets>
+
   commandAction?: (...args: any[]) => any
+
   usageText?: string
+
   versionNumber?: string
+
   examples: CommandExample[]
+
   helpCallback?: HelpCallback
+
   globalCommand?: GlobalCommand
 
   constructor(
     public rawName: string,
     public description: string,
     public config: CommandConfig = {},
-    public cli: CAC
+    public cli: CAC,
   ) {
     this.options = []
     this.aliasNames = []
     this.name = removeBrackets(rawName)
-    this.args = findAllBrackets(rawName)
+    this.args = parseBrackets(rawName)
     this.examples = []
   }
 
@@ -82,14 +81,14 @@ class Command {
   }
 
   /**
-   * Add a option for this command
-   * @param rawName Raw option name(s)
-   * @param description Option description
-   * @param config Option config
+   * Add a option for this command.
+   *
+   * @param rawName Raw option name(s).
+   * @param description Option description.
+   * @param config Option config.
    */
   option(rawName: string, description: string, config?: OptionConfig) {
-    const option = new Option(rawName, description, config)
-    this.options.push(option)
+    this.options.push(new Option(rawName, description, config))
     return this
   }
 
@@ -124,19 +123,13 @@ class Command {
    * @param name Option name
    */
   hasOption(name: string) {
-    name = name.split('.')[0]
-    return this.options.find((option) => {
-      return option.names.includes(name)
-    })
+    const optionName = name.split('.')[0] ?? ''
+    return this.options.find((option) => option.names.includes(optionName))
   }
 
   outputHelp() {
     const { name, commands } = this.cli
-    const {
-      versionNumber,
-      options: globalOptions,
-      helpCallback,
-    } = this.cli.globalCommand
+    const { versionNumber, options: globalOptions, helpCallback } = this.cli.globalCommand
 
     let sections: HelpSection[] = [
       {
@@ -149,58 +142,44 @@ class Command {
       body: `  $ ${name} ${this.usageText || this.rawName}`,
     })
 
-    const showCommands =
-      (this.isGlobalCommand || this.isDefaultCommand) && commands.length > 0
+    const showCommands = (this.isGlobalCommand || this.isDefaultCommand) && commands.length > 0
 
     if (showCommands) {
-      const longestCommandName = findLongest(
-        commands.map((command) => command.rawName)
-      )
+      const longestCommandName = findLongest(commands.map((command) => command.rawName))
       sections.push({
         title: 'Commands',
         body: commands
           .map((command) => {
-            return `  ${padRight(
-              command.rawName,
-              longestCommandName.length
-            )}  ${command.description}`
+            return `  ${padRightIfLongerThan(command.rawName, longestCommandName?.length ?? 0)}  ${
+              command.description
+            }`
           })
           .join('\n'),
       })
       sections.push({
         title: `For more info, run any command with the \`--help\` flag`,
         body: commands
-          .map(
-            (command) =>
-              `  $ ${name}${
-                command.name === '' ? '' : ` ${command.name}`
-              } --help`
-          )
+          .map((command) => `  $ ${name}${command.name === '' ? '' : ` ${command.name}`} --help`)
           .join('\n'),
       })
     }
 
-    let options = this.isGlobalCommand
-      ? globalOptions
-      : [...this.options, ...(globalOptions || [])]
+    let options = this.isGlobalCommand ? globalOptions : [...this.options, ...(globalOptions || [])]
+
     if (!this.isGlobalCommand && !this.isDefaultCommand) {
       options = options.filter((option) => option.name !== 'version')
     }
+
     if (options.length > 0) {
-      const longestOptionName = findLongest(
-        options.map((option) => option.rawName)
-      )
+      const longestOptionName = findLongest(options.map((option) => option.rawName))
+
       sections.push({
         title: 'Options',
         body: options
           .map((option) => {
-            return `  ${padRight(option.rawName, longestOptionName.length)}  ${
+            return `  ${padRightIfLongerThan(option.rawName, longestOptionName?.length ?? 0)}  ${
               option.description
-            } ${
-              option.config.default === undefined
-                ? ''
-                : `(default: ${option.config.default})`
-            }`
+            } ${option.config.default === undefined ? '' : `(default: ${option.config.default})`}`
           })
           .join('\n'),
       })
@@ -227,17 +206,16 @@ class Command {
     console.log(
       sections
         .map((section) => {
-          return section.title
-            ? `${section.title}:\n${section.body}`
-            : section.body
+          return section.title ? `${section.title}:\n${section.body}` : section.body
         })
-        .join('\n\n')
+        .join('\n\n'),
     )
   }
 
   outputVersion() {
     const { name } = this.cli
     const { versionNumber } = this.cli.globalCommand
+
     if (versionNumber) {
       console.log(`${name}/${versionNumber} ${platformInfo}`)
     }
@@ -247,9 +225,7 @@ class Command {
     const minimalArgsCount = this.args.filter((arg) => arg.required).length
 
     if (this.cli.args.length < minimalArgsCount) {
-      throw new CACError(
-        `missing required args for command \`${this.rawName}\``
-      )
+      throw new CACError(`missing required args for command \`${this.rawName}\``)
     }
   }
 
@@ -263,14 +239,8 @@ class Command {
 
     if (!this.config.allowUnknownOptions) {
       for (const name of Object.keys(options)) {
-        if (
-          name !== '--' &&
-          !this.hasOption(name) &&
-          !globalCommand.hasOption(name)
-        ) {
-          throw new CACError(
-            `Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``
-          )
+        if (name !== '--' && !this.hasOption(name) && !globalCommand.hasOption(name)) {
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``)
         }
       }
     }
@@ -281,14 +251,16 @@ class Command {
    */
   checkOptionValue() {
     const { options: parsedOptions, globalCommand } = this.cli
+
     const options = [...globalCommand.options, ...this.options]
+
     for (const option of options) {
-      const value = parsedOptions[option.name.split('.')[0]]
+      const value = parsedOptions[option.name.split('.')[0] ?? '']
+
       // Check required option value
       if (option.required) {
-        const hasNegated = options.some(
-          (o) => o.negated && o.names.includes(option.name)
-        )
+        const hasNegated = options.some((o) => o.negated && o.names.includes(option.name))
+
         if (value === true || (value === false && !hasNegated)) {
           throw new CACError(`option \`${option.rawName}\` value is missing`)
         }
@@ -297,9 +269,11 @@ class Command {
   }
 }
 
+const GLOBAL_SYMBOL = '@@global@@'
+
 class GlobalCommand extends Command {
   constructor(cli: CAC) {
-    super('@@global@@', '', {}, cli)
+    super(GLOBAL_SYMBOL, '', {}, cli)
   }
 }
 

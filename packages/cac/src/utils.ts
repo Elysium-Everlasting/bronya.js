@@ -1,53 +1,55 @@
+import type { MriOptions } from './mri.js'
 import Option from './option.js'
 
-export const removeBrackets = (v: string) => v.replace(/[<[].+/, '').trim()
+const ANGLED_BRACKET_REGEX_GLOBAL = /<([^>]+)>/g
 
-export const findAllBrackets = (v: string) => {
-  const ANGLED_BRACKET_RE_GLOBAL = /<([^>]+)>/g
-  const SQUARE_BRACKET_RE_GLOBAL = /\[([^\]]+)\]/g
+const SQUARE_BRACKET_REGEX_GLOBAL = /\[([^\]]+)\]/g
 
-  const res = []
+export function parseBrackets(str: string): ParseResult[] {
+  const parseResults: ParseResult[] = []
 
-  const parse = (match: string[]) => {
-    let variadic = false
-    let value = match[1] ?? ''
+  let angledMatch: string[] | null
 
-    if (value.startsWith('...')) {
-      value = value.slice(3)
-      variadic = true
-    }
-
-    return {
-      required: Boolean(match[0]?.startsWith('<')),
-      value,
-      variadic
-    }
+  while ((angledMatch = ANGLED_BRACKET_REGEX_GLOBAL.exec(str))) {
+    parseResults.push(parse(angledMatch))
   }
 
-  let angledMatch
+  let squareMatch: string[] | null
 
-  while ((angledMatch = ANGLED_BRACKET_RE_GLOBAL.exec(v))) {
-    res.push(parse(angledMatch))
+  while ((squareMatch = SQUARE_BRACKET_REGEX_GLOBAL.exec(str))) {
+    parseResults.push(parse(squareMatch))
   }
 
-  let squareMatch
-
-  while ((squareMatch = SQUARE_BRACKET_RE_GLOBAL.exec(v))) {
-    res.push(parse(squareMatch))
-  }
-
-  return res
+  return parseResults
 }
 
-interface MriOptions {
-  alias: {
-    [k: string]: string[]
+interface ParseResult {
+  required: boolean
+  value?: string
+  variadic?: boolean
+}
+
+function parse(match: string[]): ParseResult {
+  const variadic = match[1]?.startsWith('...')
+  const value = variadic ? match[1]?.slice(3) : match[1]
+
+  return {
+    required: Boolean(match[0]?.startsWith('<')),
+    value,
+    variadic,
   }
-  boolean: string[]
+}
+
+export function removeBrackets(v: string): string {
+  return v.replace(/[<[].+/, '').trim()
 }
 
 export const getMriOptions = (options: Option[]) => {
-  const result: MriOptions = { alias: {}, boolean: [] }
+  const alias: Record<string, string[]> = {}
+
+  const boolean: string[] = []
+
+  const result = { alias, boolean } satisfies MriOptions
 
   for (const [index, option] of options.entries()) {
     // We do not set default values in mri options
@@ -64,24 +66,25 @@ export const getMriOptions = (options: Option[]) => {
       result.alias[name] = option.names.slice(1)
     }
 
+    if (!option.isBoolean) {
+      continue
+    }
+
     // Set boolean
-    if (option.isBoolean) {
-      if (option.negated) {
-        // For negated option
-        // We only set it to `boolean` type when there's no string-type option with the same name
-        const hasStringTypeOption = options.some((o, i) => {
-          return (
-            i !== index &&
-            o.names.some(name => option.names.includes(name)) &&
-            typeof o.required === 'boolean'
-          )
-        })
-        if (!hasStringTypeOption) {
-          result.boolean.push(name)
-        }
-      } else {
+    if (option.negated) {
+      // For negated option, only set it to `boolean` type when there's no string-type option with the same name.
+      const hasStringTypeOption = options.some(
+        (o, i) =>
+          i !== index &&
+          o.names.some((name) => option.names.includes(name)) &&
+          typeof o.required === 'boolean',
+      )
+
+      if (!hasStringTypeOption) {
         result.boolean.push(name)
       }
+    } else {
+      result.boolean.push(name)
     }
   }
 
@@ -94,21 +97,17 @@ export const findLongest = (arr: string[]) => {
   })[0]
 }
 
-export const padRight = (str: string, length: number) => {
+export function padRightIfLongerThan(str: string, length: number) {
   return str.length >= length ? str : `${str}${' '.repeat(length - str.length)}`
 }
 
-export const camelcase = (input: string) => {
+export function camelcase(input: string) {
   return input.replace(/([a-z])-([a-z])/g, (_, p1, p2) => {
     return p1 + p2.toUpperCase()
   })
 }
 
-export const setDotProp = (
-  obj: { [k: string]: any },
-  keys: string[],
-  val: any
-) => {
+export function setDotProp(obj: { [k: string]: any }, keys: string[], val: any) {
   let i = 0
   let length = keys.length
   let t = obj
@@ -135,10 +134,7 @@ export const setDotProp = (
   }
 }
 
-export const setByType = (
-  obj: { [k: string]: any },
-  transforms: { [k: string]: any }
-) => {
+export function setByType(obj: { [k: string]: any }, transforms: { [k: string]: any }) {
   for (const key of Object.keys(transforms)) {
     const transform = transforms[key]
 
@@ -152,12 +148,12 @@ export const setByType = (
   }
 }
 
-export const getFileName = (input: string) => {
+export function getFileName(input: string) {
   const m = /([^\\\/]+)$/.exec(input)
   return m ? m[1] : ''
 }
 
-export const camelcaseOptionName = (name: string) => {
+export function camelcaseOptionName(name: string) {
   // Camelcase the option name
   // Don't camelcase anything after the dot `.`
   return name

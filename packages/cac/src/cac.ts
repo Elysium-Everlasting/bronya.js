@@ -1,10 +1,10 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import mri from './mri.js'
 import Command, {
   GlobalCommand,
-  CommandConfig,
-  HelpCallback,
-  CommandExample,
+  type CommandConfig,
+  type HelpCallback,
+  type CommandExample,
 } from './command.js'
 import type { OptionConfig } from './option.js'
 import {
@@ -18,36 +18,44 @@ import { processArgs } from './node.js'
 
 interface ParsedArgv {
   args: ReadonlyArray<string>
-  options: {
-    [k: string]: any
-  }
+  options: Record<string, any>
 }
 
 class CAC extends EventEmitter {
-  /** The program name to display in help and version message */
+  /**
+   * The program name to display in help and version message
+   */
   name: string
+
   commands: Command[]
+
   globalCommand: GlobalCommand
+
   matchedCommand?: Command
+
   matchedCommandName?: string
+
   /**
    * Raw CLI arguments
    */
   rawArgs: string[]
+
   /**
    * Parsed CLI arguments
    */
   args: ParsedArgv['args']
+
   /**
    * Parsed CLI options, camelCased
    */
   options: ParsedArgv['options']
 
   showHelpOnExit?: boolean
+
   showVersionOnExit?: boolean
 
   /**
-   * @param name The program name to display in help and version message
+   * @param name The program name to display in help and version message.
    */
   constructor(name = '') {
     super()
@@ -73,10 +81,13 @@ class CAC extends EventEmitter {
   /**
    * Add a sub-command
    */
-  command(rawName: string, description?: string, config?: CommandConfig) {
-    const command = new Command(rawName, description || '', config, this)
+  command(rawName: string, description: string = '', config?: CommandConfig) {
+    const command = new Command(rawName, description, config, this)
+
     command.globalCommand = this.globalCommand
+
     this.commands.push(command)
+
     return command
   }
 

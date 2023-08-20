@@ -37,25 +37,38 @@ export default function mri(args: string[] = [], options: MriOptions = {}) {
 
   const keys = options.unknown ? Object.keys(settings.alias ?? {}) : []
 
-  args.every((arg, i) => {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+
+    if (arg == null) {
+      continue
+    }
+
     if (arg === '--') {
-      out['_'] = out['_'].concat(args.slice(i + 1))
-      return false
+      out['_'] = out['_'].concat(args.slice(++i))
+      break
     }
 
-    let dashIndex = 0
+    /**
+     * The last dash, i.e. options may be passed with a single or double dash.
+     *
+     * @example -a -> lastDashIndex = 1
+     * @example --a=true -> lastDashIndex = 2
+     * @example --a true -> lastDashIndex = 2
+     */
+    let lastDashIndex = 0
 
-    for (; dashIndex < arg.length; dashIndex++) {
-      if (arg.charCodeAt(dashIndex) !== 45) break
+    for (; lastDashIndex < arg.length; lastDashIndex++) {
+      if (arg.charCodeAt(lastDashIndex) !== 45) break // "-"
     }
 
-    if (dashIndex === 0) {
+    if (lastDashIndex === 0) {
       out['_'].push(arg)
-      return true
+      continue
     }
 
-    if (arg.substring(dashIndex, dashIndex + 3) === 'no-') {
-      const name = arg.substring(dashIndex + 3)
+    if (arg.substring(lastDashIndex, lastDashIndex + 3) === 'no-') {
+      const name = arg.substring(lastDashIndex + 3)
 
       if (options.unknown && !~keys.indexOf(name)) {
         return options.unknown(arg)
@@ -63,35 +76,60 @@ export default function mri(args: string[] = [], options: MriOptions = {}) {
 
       out[name] = false
 
-      return true
+      continue
     }
 
-    let equalIndex = arg.slice(dashIndex + 1).indexOf('=')
+    /**
+     * @example
+     * --foo=bar -> args = ['--foo=bar']
+     * The value is the substring from the last dash to the equal sign.
+     * This is one value in the args array, and the key/value pair is found by splitting the string.
+     *
+     * @example
+     * --foo bar -> args = ['--foo', 'bar']
+     *  The value is the substring after the space.
+     *  This is two values in the args array, so the value is found at the next index.
+     */
+    let equalsIndex = lastDashIndex + 1
 
-    const name = arg.substring(dashIndex, equalIndex)
+    for (; equalsIndex < arg.length; equalsIndex++) {
+      if (arg.charCodeAt(equalsIndex) === 61) break // "="
+    }
+
+    const key = arg.substring(lastDashIndex, equalsIndex)
 
     const val =
-      arg.substring(equalIndex + 1) ||
+      arg.substring(++equalsIndex) ||
       i + 1 === args.length ||
-      String(args[i + 1]).charCodeAt(0) === 45 ||
+      ('' + args[i + 1]).charCodeAt(0) === 45 ||
       args[++i]
 
-    const nameArray = dashIndex === 2 ? [name] : name
+    /**
+     * If there were 2 dashes in a row, then treat it as a single key.
+     *
+     * @example --foo bar -> { foo: 'bar' }
+     * @example --foo=bar -> { foo: true, bar: true }
+     *
+     * If there was only 1 dash, then all the characters after the dash are boolean flags indicating `true`.
+     *
+     * @example -abc  -> { a: true, b: true, c: true }
+     */
+    const keyOrBooleanFlags = lastDashIndex === 2 ? [key] : key
 
-    let idx = 0
+    for (equalsIndex = 0; equalsIndex < keyOrBooleanFlags.length; equalsIndex++) {
+      const name = keyOrBooleanFlags[equalsIndex]
 
-    for (const name of nameArray) {
-      if (options.unknown && !~keys.indexOf(name)) {
-        return options.unknown('-'.repeat(dashIndex) + name)
+      if (name == null) {
+        continue
       }
 
-      toVal(out, name, idx + 1 < nameArray.length || val, options)
+      if (options.unknown && !~keys.indexOf(name)) {
+        return options.unknown('-'.repeat(lastDashIndex) + name)
+      }
 
-      idx++
+      toVal(out, name, equalsIndex + 1 < keyOrBooleanFlags.length || val, options)
     }
-
-    return true
-  })
+  }
 
   if (options.default) {
     Object.entries(options.default).forEach(([key, value]) => {
@@ -112,12 +150,13 @@ export default function mri(args: string[] = [], options: MriOptions = {}) {
   return out
 }
 
+/**
+ * Idk how this works. :shrug:
+ */
 function toVal(out: Record<string, any>, key: string, val: unknown, opts: MriOptions) {
   let x = out[key]
 
-  let old = out[key]
-
-  let nxt = !!~(opts.string?.indexOf(key) ?? -1)
+  let next = !!~(opts.string?.indexOf(key) ?? -1)
     ? val == null || val === true
       ? ''
       : String(val)
@@ -131,7 +170,9 @@ function toVal(out: Record<string, any>, key: string, val: unknown, opts: MriOpt
           ? x
           : val
 
-  out[key] = old == null ? nxt : Array.isArray(old) ? old.concat(nxt) : [old, nxt]
+  let old = out[key]
+
+  out[key] = old == null ? next : Array.isArray(old) ? old.concat(next) : [old, next]
 }
 
 function transformAliases(aliases: Dict<Arrayable<string>>): NormalizedAliases {

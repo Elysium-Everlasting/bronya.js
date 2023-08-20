@@ -6,14 +6,25 @@ interface OptionConfig {
 }
 
 export default class Option {
-  /** Option name */
+  /**
+   * Option name
+   */
   name: string
-  /** Option name and aliases */
+
+  /**
+   * Option name and aliases
+   */
   names: string[]
+
   isBoolean?: boolean
-  // `required` will be a boolean for options with brackets
+
+  /**
+   * `required` will be a boolean for options with brackets.
+   */
   required?: boolean
+
   config: OptionConfig
+
   negated: boolean
 
   constructor(
@@ -27,6 +38,7 @@ export default class Option {
     rawName = rawName.replace(/\.\*/g, '')
 
     this.negated = false
+
     this.names = removeBrackets(rawName)
       .split(',')
       .map((v: string) => {
