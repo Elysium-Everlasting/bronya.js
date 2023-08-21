@@ -1,11 +1,11 @@
-import { CAC } from './cac.js'
+import { CLI } from './cli.js'
 import { Command } from './command.js'
 
 /**
  * @param name The program name to display in help and version message.
  */
-const cac = (name = '') => new CAC(name)
+const cli = (name = '') => new CLI(name)
 
-export default cac
+export default cli
 
-export { cac, CAC, Command }
+export { cli, CLI, Command }

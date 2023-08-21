@@ -12,12 +12,12 @@ import { processArgs } from './node.js'
 import type { OptionConfig } from './option.js'
 import { getMriOptions, setDotProp, setByType, getFileName, camelcaseOptionName } from './utils.js'
 
-interface ParsedArgv {
+export interface ParsedArgv {
   args: readonly string[]
   options: Record<string, unknown>
 }
 
-export class CAC extends EventEmitter {
+export class CLI extends EventEmitter {
   /**
    * The program name to display in help and version message
    */
@@ -31,7 +31,7 @@ export class CAC extends EventEmitter {
   /**
    * A global command is passed to all created commands in order to share context.
    */
-  context: GlobalCommand
+  globalCommand: GlobalCommand
 
   /**
    * The command that matches with the provided CLI arguments.
@@ -68,8 +68,8 @@ export class CAC extends EventEmitter {
   constructor(name = '') {
     super()
     this.name = name
-    this.context = new GlobalCommand()
-    this.context.usage('<command> [options]')
+    this.globalCommand = new GlobalCommand()
+    this.globalCommand.usage('<command> [options]')
   }
 
   /**
@@ -78,7 +78,7 @@ export class CAC extends EventEmitter {
    * This is not used by sub-commands.
    */
   usage(text: string) {
-    this.context.usage(text)
+    this.globalCommand.usage(text)
     return this
   }
 
@@ -86,12 +86,9 @@ export class CAC extends EventEmitter {
    * Add a sub-command
    */
   command<T extends string>(rawName: T, description: string = '', config?: CommandConfig) {
-    const command = new Command(rawName, description, config, this.context)
-
-    command.globalCommand = this.context
-
+    const command = new Command(rawName, description, config, this.globalCommand)
+    command.globalCommand = this.globalCommand
     this.commands.push(command as Command)
-
     return command
   }
 
@@ -101,7 +98,7 @@ export class CAC extends EventEmitter {
    * Which is also applied to sub-commands.
    */
   option(rawName: string, description: string, config?: OptionConfig) {
-    this.context.option(rawName, description, config)
+    this.globalCommand.option(rawName, description, config)
     return this
   }
 
@@ -109,8 +106,8 @@ export class CAC extends EventEmitter {
    * Show help message when `-h, --help` flags appear.
    */
   help(callback?: HelpCallback) {
-    this.context.option('-h, --help', 'Display this message')
-    this.context.helpCallback = callback
+    this.globalCommand.option('-h, --help', 'Display this message')
+    this.globalCommand.helpCallback = callback
     this.showHelpOnExit = true
     return this
   }
@@ -119,7 +116,7 @@ export class CAC extends EventEmitter {
    * Show version number when `-v, --version` flags appear.
    */
   version(version: string, customFlags = '-v, --version') {
-    this.context.version(version, customFlags)
+    this.globalCommand.version(version, customFlags)
     this.showVersionOnExit = true
     return this
   }
@@ -130,7 +127,7 @@ export class CAC extends EventEmitter {
    * This example added here will not be used by sub-commands.
    */
   example(example: CommandExample) {
-    this.context.example(example)
+    this.globalCommand.example(example)
     return this
   }
 
@@ -143,7 +140,7 @@ export class CAC extends EventEmitter {
     if (this.matchedCommand) {
       this.matchedCommand.outputHelp(this.name, this.commands)
     } else {
-      this.context.outputHelp(this.name, this.commands)
+      this.globalCommand.outputHelp(this.name, this.commands)
     }
   }
 
@@ -152,22 +149,7 @@ export class CAC extends EventEmitter {
    *
    */
   outputVersion() {
-    this.context.outputVersion()
-  }
-
-  private setParsedInfo(argv: ParsedArgv, matchedCommand?: Command, matchedCommandName?: string) {
-    this.args = argv.args
-    this.options = argv.options
-
-    if (matchedCommand) {
-      this.matchedCommand = matchedCommand
-    }
-
-    if (matchedCommandName) {
-      this.matchedCommandName = matchedCommandName
-    }
-
-    return this
+    this.globalCommand.outputVersion()
   }
 
   unsetMatchedCommand() {
@@ -256,7 +238,7 @@ export class CAC extends EventEmitter {
 
   private mri(argv: string[], command?: Command): ParsedArgv {
     // All added options
-    const cliOptions = [...this.context.options, ...(command ? command.options : [])]
+    const cliOptions = [...this.globalCommand.options, ...(command ? command.options : [])]
 
     const mriOptions = getMriOptions(cliOptions)
 
@@ -286,7 +268,7 @@ export class CAC extends EventEmitter {
     const ignoreDefault =
       command && command.config.ignoreOptionDefaultValue
         ? command.config.ignoreOptionDefaultValue
-        : this.context.config.ignoreOptionDefaultValue
+        : this.globalCommand.config.ignoreOptionDefaultValue
 
     const transforms = Object.create(null)
 
@@ -320,33 +302,40 @@ export class CAC extends EventEmitter {
     return { args, options }
   }
 
-  runMatchedCommand() {
-    const { args, options, matchedCommand: command } = this
+  private setParsedInfo(argv: ParsedArgv, matchedCommand?: Command, matchedCommandName?: string) {
+    this.args = argv.args
+    this.options = argv.options
 
-    if (!command || !command.commandAction) {
+    if (matchedCommand) {
+      this.matchedCommand = matchedCommand
+    }
+
+    if (matchedCommandName) {
+      this.matchedCommandName = matchedCommandName
+    }
+
+    return this
+  }
+
+  runMatchedCommand() {
+    if (!this.matchedCommand?.commandAction) {
       return
     }
 
-    command.checkUnknownOptions(this.options)
+    this.matchedCommand.checkUnknownOptions(this.options)
 
-    command.checkOptionValue(this.options)
+    this.matchedCommand.checkOptionValue(this.options)
 
-    command.checkRequiredArgs(this.args)
+    this.matchedCommand.checkRequiredArgs(this.args)
 
-    const actionArgs: Record<string, unknown> = {}
+    const actionArgs = this.matchedCommand.args.reduce(
+      (accumulatedArgs, arg, index) => {
+        accumulatedArgs[arg.key] = arg.variadic ? this.args.slice(index) : this.args[index]
+        return accumulatedArgs
+      },
+      {} as Record<string, unknown>,
+    )
 
-    command.args.forEach((arg, index) => {
-      if (arg.variadic) {
-        actionArgs[arg.key] = args.slice(index)
-        // actionArgs.push(args.slice(index))
-      } else {
-        actionArgs[arg.key] = args[index]
-        // actionArgs.push(args[index])
-      }
-    })
-
-    // actionArgs.push(options)
-
-    return command.commandAction.apply(this, [actionArgs, options])
+    return this.matchedCommand.commandAction.apply(this, [actionArgs, this.options])
   }
 }

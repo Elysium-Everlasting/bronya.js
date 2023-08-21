@@ -2,9 +2,9 @@ import { defineConfig } from 'tsup'
 
 export default defineConfig({
   entry: {
-    api: 'src/cdk/constructs/Api/index.ts',
+    index: 'src/index.ts',
   },
-  external: [/esbuild/],
+  bundle: true,
   format: ['cjs', 'esm'],
   dts: true,
   outDir: 'dist',

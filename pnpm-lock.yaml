@@ -181,69 +181,11 @@ importers:
         specifier: ^3.12.7
         version: 3.12.7
 
-  packages/cac:
-    dependencies:
-      '@klein.js/core':
-        specifier: workspace:^
-        version: link:../core
-      acorn:
-        specifier: ^8.10.0
-        version: 8.10.0
-      acorn-typescript:
-        specifier: ^1.4.1
-        version: 1.4.1(acorn@8.10.0)
-      aws-cdk-lib:
-        specifier: ^2.92.0
-        version: 2.92.0(constructs@10.2.69)
-      body-parser:
-        specifier: ^1.20.2
-        version: 1.20.2
-      cac:
-        specifier: ^6.7.14
-        version: 6.7.14
-      chokidar:
-        specifier: ^3.5.3
-        version: 3.5.3
-      consola:
-        specifier: ^3.2.3
-        version: 3.2.3
-      constructs:
-        specifier: ^10.2.69
-        version: 10.2.69
-      cors:
-        specifier: ^2.8.5
-        version: 2.8.5
-      defu:
-        specifier: ^6.1.2
-        version: 6.1.2
-      express:
-        specifier: ^4.18.2
-        version: 4.18.2
-      jiti:
-        specifier: ^1.19.1
-        version: 1.19.1
+  packages/cli:
     devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.119
-        version: 8.10.119
-      '@types/body-parser':
-        specifier: ^1.19.2
-        version: 1.19.2
-      '@types/cors':
-        specifier: ^2.8.13
-        version: 2.8.13
-      '@types/estree':
-        specifier: ^1.0.1
-        version: 1.0.1
-      '@types/express':
-        specifier: ^4.17.17
-        version: 4.17.17
       '@vitest/coverage-v8':
         specifier: ^0.34.0
         version: 0.34.0(vitest@0.34.0)
-      esbuild:
-        specifier: ^0.19.2
-        version: 0.19.2
       tsup:
         specifier: ^7.2.0
         version: 7.2.0(ts-node@10.9.1)(typescript@5.1.6)
@@ -2078,14 +2020,6 @@ packages:
       '@jridgewell/trace-mapping': 0.3.19
     dev: true
 
-  /@jridgewell/resolve-uri@3.1.0:
-    resolution:
-      {
-        integrity: sha512-F2msla3tad+Mfht5cJq7LSXcdudKTWCVYUgw6pLFOOHSTtZlj6SWNYAp+AhuqLmWdBO2X5hPrLcu8cVP8fy28w==,
-      }
-    engines: { node: '>=6.0.0' }
-    dev: true
-
   /@jridgewell/resolve-uri@3.1.1:
     resolution:
       {
@@ -2103,28 +2037,11 @@ packages:
     engines: { node: '>=6.0.0' }
     dev: true
 
-  /@jridgewell/sourcemap-codec@1.4.14:
-    resolution:
-      {
-        integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==,
-      }
-    dev: true
-
   /@jridgewell/sourcemap-codec@1.4.15:
     resolution:
       {
         integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==,
       }
-    dev: true
-
-  /@jridgewell/trace-mapping@0.3.18:
-    resolution:
-      {
-        integrity: sha512-w+niJYzMHdd7USdiH2U6869nqhD2nbfZXND5Yp93qIbEmnDNk7PD48o+YchRVpzMU7M6jVCbenTR7PA1FLQ9pA==,
-      }
-    dependencies:
-      '@jridgewell/resolve-uri': 3.1.0
-      '@jridgewell/sourcemap-codec': 1.4.14
     dev: true
 
   /@jridgewell/trace-mapping@0.3.19:
@@ -3497,6 +3414,7 @@ packages:
         integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==,
       }
     engines: { node: '>=8' }
+    dev: true
 
   /cachedir@2.3.0:
     resolution:
@@ -8924,7 +8842,7 @@ packages:
       }
     engines: { node: '>=10.12.0' }
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.18
+      '@jridgewell/trace-mapping': 0.3.19
       '@types/istanbul-lib-coverage': 2.0.4
       convert-source-map: 1.9.0
     dev: true
