@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "deploy": "cdk --app 'pnpm tsx cdk.ts' deploy",
+    "dep": "cdk --app 'pnpm tsx bronya.config.ts' deploy",
+    "des": "cdk --app 'pnpm tsx bronya.config.ts' destroy",
     "dev": "bunny dev-api"
   },
   "dependencies": {
