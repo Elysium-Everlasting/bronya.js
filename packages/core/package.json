@@ -1,11 +1,11 @@
 {
-  "name": "@klein.js/core",
+  "name": "@bronya.js/core",
   "version": "0.1.1",
   "description": "devOPs tool",
   "private": true,
   "license": "MIT",
-  "homepage": "https://elysium-everlasting.github.io/klein.js",
-  "funding": "https://github.com/Elysium-Everlasting/klein.js",
+  "homepage": "https://elysium-everlasting.github.io/bronya.js",
+  "funding": "https://github.com/Elysium-Everlasting/bronya.js",
   "contributors": [
     {
       "name": "ap0nia",
@@ -15,11 +15,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Elysium-Everlasting/klein.js",
+    "url": "https://github.com/Elysium-Everlasting/bronya.js",
     "directory": "packages/villv"
   },
   "bugs": {
-    "url": "https://github.com/Elysium-Everlasting/klein.js/issues"
+    "url": "https://github.com/Elysium-Everlasting/bronya.js/issues"
   },
   "keywords": [
     "aws",

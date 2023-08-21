@@ -1,7 +1,7 @@
 {
-  "name": "@klein.js/monorepo",
+  "name": "@bronya.js/monorepo",
   "version": "0.0.0",
-  "description": "monorepo for klein.js - devops framework",
+  "description": "monorepo for bronya.js - devops framework",
   "private": true,
   "license": "MIT",
   "homepage": "https://elysium-everlasting.github.io/klein.js",
@@ -15,10 +15,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Elysium-Everlasting/klein.js"
+    "url": "https://github.com/Elysium-Everlasting/bronya.js"
   },
   "bugs": {
-    "url": "https://github.com/Elysium-Everlasting/klein.js/issues"
+    "url": "https://github.com/Elysium-Everlasting/bronya.js/issues"
   },
   "keywords": [
     "aws",
