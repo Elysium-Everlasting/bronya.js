@@ -1,13 +1,13 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { findConfigFile, loadAppFromConfig } from '@klein.js/core'
+import { findConfigFile, loadAppFromConfig } from '@bronya.js/core'
 import {
   findAllProjects,
   getClosestProjectDirectory,
   getNamedExports,
   type DeepPartial,
-} from '@klein.js/core/utils'
+} from '@bronya.js/core/utils'
 import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as aws_events from 'aws-cdk-lib/aws-events'
 import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'

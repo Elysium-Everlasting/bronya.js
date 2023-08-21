@@ -31,7 +31,7 @@ export function findConfigFile(directory = process.cwd()) {
   }
 }
 
-export async function loadAppFromConfig(directory = workspaceRoot) {
+export async function loadAppFromConfig(directory = workspaceRoot): Promise<App> {
   const configFile = findConfigFile(directory)
 
   if (!configFile) {
@@ -71,3 +71,8 @@ export function isCdk() {
    */
   return process.env[CLI_VERSION_ENV] != null
 }
+
+/**
+ * Type is re-exported
+ */
+export type { App }

@@ -1,6 +1,6 @@
 import { build } from 'esbuild'
 
-import type { RouteInfo } from './Api.js'
+import type { RouteInfo } from '../Api.js'
 
 /**
  * Build an API route.
@@ -8,7 +8,7 @@ import type { RouteInfo } from './Api.js'
 export async function buildApiRoute(apiRouteConfig: RouteInfo) {
   const esbuildOptions = {
     ...apiRouteConfig.esbuild,
-    outdir: apiRouteConfig.esbuild.outdir ?? apiRouteConfig.outDirectory,
+    outdir: apiRouteConfig.esbuild?.outdir ?? apiRouteConfig.outDirectory,
   }
 
   esbuildOptions.entryPoints ??= {

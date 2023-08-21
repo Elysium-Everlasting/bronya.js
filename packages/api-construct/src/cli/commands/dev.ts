@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { getClosestProjectDirectory } from '@klein.js/core/utils'
+import { getClosestProjectDirectory } from '@bronya.js/core/utils'
 import type {
   APIGatewayProxyHandler,
   APIGatewayProxyCallback,
@@ -13,8 +13,8 @@ import { consola } from 'consola'
 import cors from 'cors'
 import express, { Router, type Handler } from 'express'
 
-import type { Api, RouteInfo } from './Api.js'
-import { buildApiRoute } from './build.js'
+import type { Api, RouteInfo } from '../../Api.js'
+import { buildApiRoute } from '../../scripts/build.js'
 
 /**
  * Translates the HTTP verbs for API Gateway into ExpressJS methods.
@@ -152,7 +152,7 @@ function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
 /**
  * Start an ExpressJS server for the API construct.
  */
-export async function startApiDevelopmentExpress(api: Api) {
+export async function startExpressApiDevelopmentServer(api: Api) {
   const currentProject = getClosestProjectDirectory()
 
   if (api.root === currentProject) {
