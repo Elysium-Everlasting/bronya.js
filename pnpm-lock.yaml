@@ -88,7 +88,7 @@ importers:
 
   examples/basic:
     dependencies:
-      '@klein.js/core':
+      '@bronya.js/core':
         specifier: workspace:^
         version: link:../../packages/core
       aws-cdk-lib:
@@ -119,7 +119,7 @@ importers:
 
   packages/api-construct:
     dependencies:
-      '@klein.js/core':
+      '@bronya.js/core':
         specifier: workspace:^
         version: link:../core
       acorn:
