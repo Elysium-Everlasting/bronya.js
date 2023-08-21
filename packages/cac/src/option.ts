@@ -1,10 +1,5 @@
 import { removeBrackets, camelcaseOptionName } from './utils.js'
 
-interface OptionConfig {
-  default?: unknown
-  type?: unknown[]
-}
-
 /**
  * Optional keys are captured as {@type string | undefined}
  */
@@ -64,11 +59,19 @@ type CamelCase<T extends string> = T extends `${infer KeyName}-${infer Rest}`
  * Normalize the key name by applying transformations.
  *
  * - Remove the dashes i.e. --optional or -optional -> optional
- * - Remove 'no-' prefix i.e. no-optional -> optional
  * - Convert to camelCase i.e. optional-key -> optionalKey
  * - Split the key on commas and represent them as a union for aliases i.e. optional-key, ok -> [optionalKey, ok]
  */
-type NormalizeKey<Key extends string> = CamelCase<Split<TrimDashes<Key>, ','>[number]>
+type NormalizeKey<T extends string> = CamelCase<Split<TrimDashes<T>, ','>[number]>
+
+/**
+ * TODO: how to handle if it's a union of aliases?
+ *
+ * @example --no-optional, --no-opt -> optional | opt
+ */
+type NormalizeKeyWithoutNegation<T extends string> = CamelCase<
+  RemovePrefix<'no-', Split<TrimDashes<T>, ','>[number]>
+>
 
 /**
  * All option types have a default type, i.e. required options are strings by default.
@@ -82,9 +85,9 @@ type NormalizeKey<Key extends string> = CamelCase<Split<TrimDashes<Key>, ','>[nu
 type EvaluateOptionObject<
   Key extends string,
   DefaultType = boolean,
-> = NormalizeKey<Key> extends RemovePrefix<'no-', NormalizeKey<Key>>
+> = NormalizeKey<Key> extends NormalizeKeyWithoutNegation<Key>
   ? Record<NormalizeKey<Key>, DefaultType>
-  : Record<NormalizeKey<Key>, boolean>
+  : Record<NormalizeKeyWithoutNegation<Key>, boolean>
 
 export type OptionParser<T extends string> = T extends VariadicKey<infer Key>
   ? EvaluateOptionObject<Key, string[]>
@@ -94,28 +97,32 @@ export type OptionParser<T extends string> = T extends VariadicKey<infer Key>
   ? EvaluateOptionObject<Key, string>
   : EvaluateOptionObject<T>
 
-export type Prettify<T> = {
-  [K in keyof T]: T[K]
+/**
+ * Configure the option.
+ */
+export interface OptionConfig {
+  default?: unknown
+  type?: unknown[]
 }
 
-export type A = Prettify<OptionParser<'--optional [k]'>>
-
-export type B = Prettify<OptionParser<'--no-optional [k]'>>
-
-export type C = Prettify<OptionParser<'-optional [k]'>>
-
-export type D = Prettify<OptionParser<'--variadic [...k]'>>
-
-export type E = Prettify<OptionParser<'--required <k>'>>
-
-export type F = Prettify<OptionParser<'--type <type>'>>
-
-export type G = Prettify<OptionParser<'--clearScreen'>>
-
-export type H = Prettify<OptionParser<'--clear-screen'>>
-
-export type I = Prettify<OptionParser<'--clear-screen, cs'>>
-
+/**
+ * A CLI option.
+ *
+ * Initialized with a string and parsed into a type-safe object.
+ *
+ * @example
+ *
+ * ```ts
+ * const optionalOption = new Option('--optional [optional]', 'description')
+ *        ^? Option<{ optional: string | undefined }>
+ *
+ * const requiredOption = new Option('--required <required>', 'description')
+ *        ^? Option<{ required: string  }>
+ *
+ * const variadicOption = new Option('--variadic [...variadic]', 'description')
+ *        ^? Option<{ variadic: string[]  }>
+ * ```
+ */
 export default class Option<T = unknown> {
   /**
    * Option name
@@ -127,19 +134,29 @@ export default class Option<T = unknown> {
    */
   names: string[]
 
-  isBoolean?: boolean
-
   /**
    * `required` will be a boolean for options with brackets.
    */
   required?: boolean
 
-  config: OptionConfig
+  /**
+   * Whether it's a boolean flag. i.e. negated options or not of the three variations.
+   */
+  isBoolean?: boolean
 
+  /**
+   * Whether the option begins with `--no-`.
+   * @example --no-optional -> optional: false
+   */
   negated: boolean
 
   /**
-   * @experimental What the object looks like.
+   * Configure the option behavior.
+   */
+  config: OptionConfig
+
+  /**
+   * @warning Don't access this property! This is only here to show the parsed type.
    */
   shape: T = {} as T
 
@@ -186,5 +203,3 @@ export default class Option<T = unknown> {
     }
   }
 }
-
-export type { OptionConfig }

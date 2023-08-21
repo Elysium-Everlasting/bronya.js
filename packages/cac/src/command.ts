@@ -1,4 +1,3 @@
-import CAC from './cac.js'
 import { platformInfo } from './node.js'
 import Option, { type OptionConfig, type OptionParser } from './option.js'
 import {
@@ -9,12 +8,12 @@ import {
   CACError,
 } from './utils.js'
 
-interface HelpSection {
+export interface HelpSection {
   title?: string
   body: string
 }
 
-interface CommandConfig {
+export interface CommandConfig {
   allowUnknownOptions?: boolean
   ignoreOptionDefaultValue?: boolean
 }
@@ -46,11 +45,14 @@ type CommandParser<T extends string> = T extends `${infer L}${VariadicKey<infer 
   ? Record<Key, string> & CommandParser<L> & CommandParser<R>
   : unknown
 
-type HelpCallback = (sections: HelpSection[]) => void | HelpSection[]
+export type HelpCallback = (sections: HelpSection[]) => void | HelpSection[]
 
-type CommandExample = ((bin: string) => string) | string
+export type CommandExample = ((bin: string) => string) | string
 
-class Command<RawArgs extends string = '', T = unknown> {
+/**
+ * Circular dependency on the CLI class has been removed.
+ */
+export class Command<RawArgs extends string = '', T = unknown> {
   options: Option[] = []
 
   aliasNames: string[] = []
@@ -72,13 +74,17 @@ class Command<RawArgs extends string = '', T = unknown> {
 
   helpCallback?: HelpCallback
 
-  globalCommand?: GlobalCommand
-
+  /**
+   * @param rawName The raw command string. e.g. 'build [...files]'
+   * @param description A description for the command to display in help message.
+   * @param config Configuration for the command.
+   * @param globalCommand The global command object.
+   */
   constructor(
     public rawName: RawArgs,
     public description: string,
     public config: CommandConfig = {},
-    public cli: CAC,
+    public globalCommand = new GlobalCommand(),
   ) {
     this.name = removeBrackets(rawName)
     this.args = parseBracketedKeys(rawName)
@@ -161,9 +167,8 @@ class Command<RawArgs extends string = '', T = unknown> {
     return this.options.find((option) => option.names.includes(optionName))
   }
 
-  outputHelp() {
-    const { name, commands } = this.cli
-    const { versionNumber, options: globalOptions, helpCallback } = this.cli.globalCommand
+  outputHelp(name: string, commands: Command[]) {
+    const { versionNumber, options: globalOptions, helpCallback } = this.globalCommand
 
     let sections: HelpSection[] = [
       {
@@ -246,19 +251,16 @@ class Command<RawArgs extends string = '', T = unknown> {
     )
   }
 
-  outputVersion() {
-    const { name } = this.cli
-    const { versionNumber } = this.cli.globalCommand
-
-    if (versionNumber) {
-      console.log(`${name}/${versionNumber} ${platformInfo}`)
+  outputVersion(name = '') {
+    if (this.globalCommand.versionNumber) {
+      console.log(`${name}/${this.globalCommand.versionNumber} ${platformInfo}`)
     }
   }
 
-  checkRequiredArgs() {
+  checkRequiredArgs(args: readonly string[] | string[]) {
     const minimalArgsCount = this.args.filter((arg) => arg.required).length
 
-    if (this.cli.args.length < minimalArgsCount) {
+    if (args.length < minimalArgsCount) {
       throw new CACError(`missing required args for command \`${this.rawName}\``)
     }
   }
@@ -268,12 +270,10 @@ class Command<RawArgs extends string = '', T = unknown> {
    *
    * Exit and output error when true
    */
-  checkUnknownOptions() {
-    const { options, globalCommand } = this.cli
-
+  checkUnknownOptions(options: Record<string, unknown>) {
     if (!this.config.allowUnknownOptions) {
       for (const name of Object.keys(options)) {
-        if (name !== '--' && !this.hasOption(name) && !globalCommand.hasOption(name)) {
+        if (name !== '--' && !this.hasOption(name) && !this.globalCommand.hasOption(name)) {
           throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : `-${name}`}\``)
         }
       }
@@ -283,10 +283,8 @@ class Command<RawArgs extends string = '', T = unknown> {
   /**
    * Check if the required string-type options exist
    */
-  checkOptionValue() {
-    const { options: parsedOptions, globalCommand } = this.cli
-
-    const options = [...globalCommand.options, ...this.options]
+  checkOptionValue(parsedOptions: Record<string, unknown>) {
+    const options = [...this.globalCommand.options, ...this.options]
 
     for (const option of options) {
       const value = parsedOptions[option.name.split('.')[0] ?? '']
@@ -305,14 +303,8 @@ class Command<RawArgs extends string = '', T = unknown> {
 
 const GLOBAL_SYMBOL = '@@global@@'
 
-class GlobalCommand extends Command<typeof GLOBAL_SYMBOL> {
-  constructor(cli: CAC) {
-    super(GLOBAL_SYMBOL, '', {}, cli)
+export class GlobalCommand extends Command<typeof GLOBAL_SYMBOL> {
+  constructor() {
+    super(GLOBAL_SYMBOL, '', {})
   }
 }
-
-export type { HelpCallback, CommandExample, CommandConfig }
-
-export { GlobalCommand }
-
-export default Command

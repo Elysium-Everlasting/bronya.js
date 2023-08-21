@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 
-import Command, {
+import {
+  Command,
   GlobalCommand,
   type CommandConfig,
   type HelpCallback,
@@ -16,18 +17,30 @@ interface ParsedArgv {
   options: Record<string, unknown>
 }
 
-class CAC extends EventEmitter {
+export class CAC extends EventEmitter {
   /**
    * The program name to display in help and version message
    */
   name: string
 
+  /**
+   * Every time the {@link Cac.command} method is called, a new {@link Command} instance is created and added.
+   */
   commands: Command[] = []
 
-  globalCommand: GlobalCommand
+  /**
+   * A global command is passed to all created commands in order to share context.
+   */
+  context: GlobalCommand
 
+  /**
+   * The command that matches with the provided CLI arguments.
+   */
   matchedCommand?: Command
 
+  /**
+   * Because a command can have aliases, this represents the one used by the CLI.
+   */
   matchedCommandName?: string
 
   /**
@@ -55,8 +68,8 @@ class CAC extends EventEmitter {
   constructor(name = '') {
     super()
     this.name = name
-    this.globalCommand = new GlobalCommand(this)
-    this.globalCommand.usage('<command> [options]')
+    this.context = new GlobalCommand()
+    this.context.usage('<command> [options]')
   }
 
   /**
@@ -65,7 +78,7 @@ class CAC extends EventEmitter {
    * This is not used by sub-commands.
    */
   usage(text: string) {
-    this.globalCommand.usage(text)
+    this.context.usage(text)
     return this
   }
 
@@ -73,9 +86,9 @@ class CAC extends EventEmitter {
    * Add a sub-command
    */
   command<T extends string>(rawName: T, description: string = '', config?: CommandConfig) {
-    const command = new Command(rawName, description, config, this)
+    const command = new Command(rawName, description, config, this.context)
 
-    command.globalCommand = this.globalCommand
+    command.globalCommand = this.context
 
     this.commands.push(command as Command)
 
@@ -88,7 +101,7 @@ class CAC extends EventEmitter {
    * Which is also applied to sub-commands.
    */
   option(rawName: string, description: string, config?: OptionConfig) {
-    this.globalCommand.option(rawName, description, config)
+    this.context.option(rawName, description, config)
     return this
   }
 
@@ -96,8 +109,8 @@ class CAC extends EventEmitter {
    * Show help message when `-h, --help` flags appear.
    */
   help(callback?: HelpCallback) {
-    this.globalCommand.option('-h, --help', 'Display this message')
-    this.globalCommand.helpCallback = callback
+    this.context.option('-h, --help', 'Display this message')
+    this.context.helpCallback = callback
     this.showHelpOnExit = true
     return this
   }
@@ -106,7 +119,7 @@ class CAC extends EventEmitter {
    * Show version number when `-v, --version` flags appear.
    */
   version(version: string, customFlags = '-v, --version') {
-    this.globalCommand.version(version, customFlags)
+    this.context.version(version, customFlags)
     this.showVersionOnExit = true
     return this
   }
@@ -117,7 +130,7 @@ class CAC extends EventEmitter {
    * This example added here will not be used by sub-commands.
    */
   example(example: CommandExample) {
-    this.globalCommand.example(example)
+    this.context.example(example)
     return this
   }
 
@@ -128,9 +141,9 @@ class CAC extends EventEmitter {
    */
   outputHelp() {
     if (this.matchedCommand) {
-      this.matchedCommand.outputHelp()
+      this.matchedCommand.outputHelp(this.name, this.commands)
     } else {
-      this.globalCommand.outputHelp()
+      this.context.outputHelp(this.name, this.commands)
     }
   }
 
@@ -139,7 +152,7 @@ class CAC extends EventEmitter {
    *
    */
   outputVersion() {
-    this.globalCommand.outputVersion()
+    this.context.outputVersion()
   }
 
   private setParsedInfo(argv: ParsedArgv, matchedCommand?: Command, matchedCommandName?: string) {
@@ -243,7 +256,7 @@ class CAC extends EventEmitter {
 
   private mri(argv: string[], command?: Command): ParsedArgv {
     // All added options
-    const cliOptions = [...this.globalCommand.options, ...(command ? command.options : [])]
+    const cliOptions = [...this.context.options, ...(command ? command.options : [])]
 
     const mriOptions = getMriOptions(cliOptions)
 
@@ -273,7 +286,7 @@ class CAC extends EventEmitter {
     const ignoreDefault =
       command && command.config.ignoreOptionDefaultValue
         ? command.config.ignoreOptionDefaultValue
-        : this.globalCommand.config.ignoreOptionDefaultValue
+        : this.context.config.ignoreOptionDefaultValue
 
     const transforms = Object.create(null)
 
@@ -314,11 +327,11 @@ class CAC extends EventEmitter {
       return
     }
 
-    command.checkUnknownOptions()
+    command.checkUnknownOptions(this.options)
 
-    command.checkOptionValue()
+    command.checkOptionValue(this.options)
 
-    command.checkRequiredArgs()
+    command.checkRequiredArgs(this.args)
 
     const actionArgs: Record<string, unknown> = {}
 
@@ -337,5 +350,3 @@ class CAC extends EventEmitter {
     return command.commandAction.apply(this, [actionArgs, options])
   }
 }
-
-export default CAC
