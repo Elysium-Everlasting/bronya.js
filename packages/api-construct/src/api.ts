@@ -7,16 +7,16 @@ import * as aws_events from 'aws-cdk-lib/aws-events'
 import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import * as aws_core from 'aws-cdk-lib/core'
-import { defu } from 'defu'
 import type { BuildOptions } from 'esbuild'
 
-import { createApiPlugin } from './cli'
+import type { ServerOptions } from './cli/commands/dev.js'
+import { createApiPlugin } from './cli/index.js'
 import {
   findAllProjects,
   getClosestProjectDirectory,
   getNamedExports,
   type DeepPartial,
-} from './utils'
+} from './utils/index.js'
 
 /**
  * The root API construct can configure the follow settings as defaults for all routes.
@@ -60,6 +60,11 @@ export interface ApiProps {
    * ESBuild options.
    */
   esbuild?: BuildOptions
+
+  /**
+   * Settings for the Express.js development server.
+   */
+  development?: ServerOptions
 
   /**
    * Environment variables to pass to the Lambda Function.
@@ -223,7 +228,26 @@ export class Api extends BronyaConstruct {
 
         const apiOverride = await getApiOverride(app)
 
-        const mergedProps = defu(apiOverride?.config, this.config)
+        const mergedProps = {
+          ...apiOverride?.config,
+          ...this.config,
+          esbuild: {
+            ...apiOverride?.config?.esbuild,
+            ...this.config.esbuild,
+          },
+          development: {
+            ...apiOverride?.config?.development,
+            ...this.config.development,
+          },
+          constructs: {
+            ...apiOverride?.config?.constructs,
+            ...this.config.constructs,
+          },
+          environment: {
+            ...apiOverride?.config?.environment,
+            ...this.config.environment,
+          },
+        }
 
         const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? 'src/index.ts')
 

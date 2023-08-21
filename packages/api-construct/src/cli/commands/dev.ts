@@ -150,9 +150,48 @@ function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
 }
 
 /**
- * Start an ExpressJS server for the API construct.
+ * Options for the Express.js development server.
  */
-export async function startExpressApiDevelopmentServer(api: Api) {
+export interface ServerOptions {
+  /**
+   * Protocol to use for the development server.
+   *
+   * @default 'http'
+   */
+  protocol?: 'http' | 'https'
+
+  /**
+   * Host to use for the development server.
+   *
+   * @default 'localhost'
+   */
+  host?: string
+
+  /**
+   * Port to use for the development server.
+   *
+   * @default 8080
+   */
+  port?: number
+}
+
+/**
+ * Start an Express.js development server for the API construct.
+ *
+ * @param overrides Override the development server options from the API construct's config.
+ */
+export async function startExpressApiDevelopmentServer(api: Api, overrides: ServerOptions = {}) {
+  /**
+   * Merge.
+   */
+  const developmentOptions = {
+    protocol: 'http',
+    host: 'localhost',
+    port: 8080,
+    ...api.config.development,
+    ...overrides,
+  }
+
   const currentProject = getClosestProjectDirectory()
 
   if (api.root === currentProject) {
@@ -266,13 +305,10 @@ export async function startExpressApiDevelopmentServer(api: Api) {
    */
   await Promise.all(apiRoutes.map(loadEndpoint)).then(refreshRouter)
 
-  /**
-   * TODO: customize port.
-   */
-  const port = 8080
-
-  app.listen(port, () => {
-    consola.info(`🎉 Express server listening at http://localhost:${port}`)
+  app.listen(developmentOptions.port, () => {
+    consola.info(
+      `🎉 Express server listening at ${developmentOptions.protocol}://${developmentOptions.host}:${developmentOptions.port}`,
+    )
   })
 
   const outputDirectories = apiRoutes.map((apiRoute) =>

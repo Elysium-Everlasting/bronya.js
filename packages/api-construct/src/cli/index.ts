@@ -1,16 +1,10 @@
 import type { Plugin } from '@bronya.js/core'
 
-/**
- * FIXME:
- * This plugin needs {@link Api} in order to define the origin construct for {@link Plugin}
- * But the API wants to use this plugin.
- */
 import type { Api } from '../api.js'
 
 import { startExpressApiDevelopmentServer } from './commands/dev.js'
 
 /**
- * TODO
  */
 interface CreateApiPluginOptions {}
 
@@ -27,13 +21,10 @@ export function createApiPlugin(options: CreateApiPluginOptions = {}): Plugin<Ap
 
     async extend(api, cli) {
       cli
-        .command('dev-api <name> [project]')
-        .option('--port-number-super-epic <port>, -i', 'port to use')
-        .option('-h, --host-name <host>', 'host to use')
-        .option('-d, --debug', 'debug mode')
-        .action(async (args, options) => {
-          console.log(args, options)
-          console.log(startExpressApiDevelopmentServer(api))
+        .command('dev-api [directory]')
+        .option('-p <port>, --port <host>', 'Port number for the express development server.')
+        .action(async (_args, options) => {
+          startExpressApiDevelopmentServer(api, options)
         })
     },
   }

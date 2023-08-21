@@ -5,26 +5,25 @@ import { App } from 'aws-cdk-lib/core'
 import { CLI_VERSION_ENV } from 'aws-cdk-lib/cx-api'
 import createJITI from 'jiti'
 
-import { getWorkspaceRoot, getClosestProjectDirectory } from './utils/project.js'
+import { getClosestProjectDirectory } from './utils/project.js'
 
 const jsExtensions = ['.js', '.mjs', '.cjs']
 const tsExtensions = jsExtensions.map((extension) => extension.replace('js', 'ts'))
 const extensions = [...jsExtensions, ...tsExtensions]
 
-const configFileName = 'klein.config'
+const configFileNames = ['bronya.config', 'usagi.config']
 
-const configFiles = extensions.map((extension) => `${configFileName}${extension}`)
-
-const workspaceRoot = getWorkspaceRoot()
+export const configFiles = extensions.flatMap((extension) =>
+  configFileNames.map((name) => `${name}${extension}`),
+)
 
 export function findConfigFile(directory = process.cwd()) {
   const configFile = fs.readdirSync(directory).find((file) => configFiles.includes(file))
 
+  /**
+   * TODO: keep looking up the directory tree until we find a config file or the workspace root.
+   */
   if (!configFile) {
-    /**
-     * TODO: keep looking up the directory tree until we find a config file or the workspace root.
-     */
-    workspaceRoot
     return undefined
   } else {
     return path.resolve(directory, configFile)
@@ -38,7 +37,7 @@ export async function loadAppFromConfig(
 
   if (!configFile) {
     throw new Error(
-      `Could not find ${configFileName} file. Please create one of ${configFiles.join(', ')}`,
+      `Could not find ${configFileNames} file. Please create one of ${configFiles.join(', ')}`,
     )
   }
 
