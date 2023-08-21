@@ -18,14 +18,14 @@ async function main() {
         break
       }
 
-      case 'placeholder': {
-        break
-      }
-
       default:
         break
     }
   })
+
+  const parsed = cli.parse()
+
+  console.log(JSON.stringify(parsed, null, 2))
 }
 
 main()

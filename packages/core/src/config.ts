@@ -5,7 +5,7 @@ import { App } from 'aws-cdk-lib/core'
 import { CLI_VERSION_ENV } from 'aws-cdk-lib/cx-api'
 import createJITI from 'jiti'
 
-import { getWorkspaceRoot } from './utils/project.js'
+import { getWorkspaceRoot, getClosestProjectDirectory } from './utils/project.js'
 
 const jsExtensions = ['.js', '.mjs', '.cjs']
 const tsExtensions = jsExtensions.map((extension) => extension.replace('js', 'ts'))
@@ -31,7 +31,9 @@ export function findConfigFile(directory = process.cwd()) {
   }
 }
 
-export async function loadAppFromConfig(directory = workspaceRoot): Promise<App> {
+export async function loadAppFromConfig(
+  directory = getClosestProjectDirectory(process.cwd()),
+): Promise<App> {
   const configFile = findConfigFile(directory)
 
   if (!configFile) {
@@ -47,7 +49,7 @@ export async function loadAppFromConfig(directory = workspaceRoot): Promise<App>
   /**
    * TODO: more sophisticated/deterministic way of finding the exported entrypoint.
    */
-  const maybeApp = exports.default?.() ?? exports?.main() ?? exports
+  const maybeApp = await (exports.default?.() ?? exports?.main() ?? exports)
 
   if (!App.isApp(maybeApp)) {
     throw new Error('Config did not return an instance of a CDK App')

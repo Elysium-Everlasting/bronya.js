@@ -1,4 +1,3 @@
-import { Stack } from 'aws-cdk-lib/core'
 import { Construct } from 'constructs'
 
 import type { Plugin } from './plugin'
@@ -59,9 +58,7 @@ export function findNestedBronyaConstructs(constructs: Construct[]): BronyaConst
 }
 
 export function getAppPlugins(app: App): Plugin[] {
-  const stacks = app.node.children.filter(Stack.isStack)
-
-  const bronyaConstructs = findNestedBronyaConstructs(stacks)
+  const bronyaConstructs = findNestedBronyaConstructs(app.node.children)
 
   return bronyaConstructs.flatMap((construct) => construct.plugins)
 }

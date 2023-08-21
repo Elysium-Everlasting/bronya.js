@@ -84,7 +84,7 @@ export class Command<RawArgs extends string = '', T = unknown> {
     public rawName: RawArgs,
     public description: string,
     public config: CommandConfig = {},
-    public globalCommand = new GlobalCommand(),
+    public globalCommand: GlobalCommand,
   ) {
     this.name = removeBrackets(rawName)
     this.args = parseBracketedKeys(rawName)
@@ -305,6 +305,6 @@ const GLOBAL_SYMBOL = '@@global@@'
 
 export class GlobalCommand extends Command<typeof GLOBAL_SYMBOL> {
   constructor() {
-    super(GLOBAL_SYMBOL, '', {})
+    super(GLOBAL_SYMBOL, '', {}, Object.create(null))
   }
 }

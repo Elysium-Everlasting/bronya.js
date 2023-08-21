@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx src/index.ts"
+    "dev-": "tsx src/index.ts",
+    "dev": "bunny dev-api"
   },
   "dependencies": {
+    "@bronya.js/api-construct": "workspace:^",
     "@bronya.js/core": "workspace:^",
     "aws-cdk-lib": "^2.92.0"
   },

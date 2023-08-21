@@ -27,6 +27,7 @@ export function createApiPlugin(options: CreateApiPluginOptions = {}): Plugin {
         .option('-h, --host-name <host>', 'host to use')
         .option('-d, --debug', 'debug mode')
         .action(async (args, options) => {
+          console.log('action')
           console.log(app)
           console.log(args)
           console.log(options)

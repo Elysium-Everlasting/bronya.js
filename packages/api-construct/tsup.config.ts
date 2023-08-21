@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup'
 
 export default defineConfig({
   entry: {
-    api: 'src/Api.ts',
+    api: 'src/api.ts',
   },
   external: [/esbuild/],
   format: ['cjs', 'esm'],

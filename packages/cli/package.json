@@ -50,7 +50,7 @@
   "files": [],
   "scripts": {
     "build": "tsup",
-    "dev": "tsx src/mri.ts",
+    "dev": "tsx src/index.ts",
     "test": "vitest"
   },
   "dependencies": {},

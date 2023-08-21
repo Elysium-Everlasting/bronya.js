@@ -88,6 +88,9 @@ importers:
 
   examples/basic:
     dependencies:
+      '@bronya.js/api-construct':
+        specifier: workspace:^
+        version: link:../../packages/api-construct
       '@bronya.js/core':
         specifier: workspace:^
         version: link:../../packages/core

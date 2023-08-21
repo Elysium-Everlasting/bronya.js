@@ -1,7 +1,7 @@
-import { Api, startApiDevelopmentExpress } from '@bronya.js/api-construct/api'
-import { App } from 'aws-cdk-lib'
+import { App } from 'aws-cdk-lib/core'
+import { Api } from '@bronya.js/api-construct/api'
 
-async function main() {
+export async function main() {
   const app = new App()
 
   const api = new Api(app, 'api', {
@@ -15,9 +15,5 @@ async function main() {
 
   await api.init()
 
-  console.log(api)
-
-  await startApiDevelopmentExpress(api)
+  return app
 }
-
-main()

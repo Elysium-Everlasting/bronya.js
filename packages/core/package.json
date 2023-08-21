@@ -26,7 +26,9 @@
     "cdk"
   ],
   "type": "module",
-  "bin": {},
+  "bin": {
+    "bunny": "dist/cli.js"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -65,7 +67,7 @@
   "files": [],
   "scripts": {
     "build": "tsup",
-    "dev": "tsx src/index.ts",
+    "dev": "tsx src/cli.ts",
     "test": "vitest"
   },
   "dependencies": {
