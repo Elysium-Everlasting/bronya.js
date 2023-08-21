@@ -1,21 +1,22 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { findConfigFile, loadAppFromConfig } from '@bronya.js/core'
-import {
-  findAllProjects,
-  getClosestProjectDirectory,
-  getNamedExports,
-  type DeepPartial,
-} from '@bronya.js/core/utils'
+import { findConfigFile, loadAppFromConfig, BronyaConstruct, Construct } from '@bronya.js/core'
 import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as aws_events from 'aws-cdk-lib/aws-events'
 import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import * as aws_core from 'aws-cdk-lib/core'
-import { Construct } from 'constructs'
 import { defu } from 'defu'
 import type { BuildOptions } from 'esbuild'
+
+import { createApiPlugin } from './cli'
+import {
+  findAllProjects,
+  getClosestProjectDirectory,
+  getNamedExports,
+  type DeepPartial,
+} from './utils'
 
 /**
  * The root API construct can configure the follow settings as defaults for all routes.
@@ -150,7 +151,7 @@ export interface FunctionResources {
   warmingRule?: aws_events.Rule
 }
 
-export class Api extends Construct {
+export class Api extends BronyaConstruct {
   public static readonly type = 'API' as const
 
   public readonly type = Api.type
@@ -171,6 +172,8 @@ export class Api extends Construct {
     this.config = config
 
     this.root = config.root ?? getClosestProjectDirectory()
+
+    this.plugins = [createApiPlugin()]
   }
 
   async init() {

@@ -1,6 +1,6 @@
 import { createCLI } from '@bronya.js/cli'
 
-import { getAppPlugins } from './plugin'
+import { getAppPlugins } from './construct.js'
 
 import { loadAppFromConfig } from '.'
 
@@ -14,7 +14,7 @@ async function main() {
   plugins.forEach((plugin) => {
     switch (plugin.type) {
       case 'cli': {
-        plugin.extend(app, cli)
+        plugin.extend?.(app, cli)
         break
       }
 

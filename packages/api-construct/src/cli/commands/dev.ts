@@ -13,7 +13,7 @@ import { consola } from 'consola'
 import cors from 'cors'
 import express, { Router, type Handler } from 'express'
 
-import type { Api, RouteInfo } from '../../Api.js'
+import type { Api, RouteInfo } from '../../api.js'
 import { buildApiRoute } from '../../scripts/build.js'
 
 /**

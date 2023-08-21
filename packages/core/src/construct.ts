@@ -65,3 +65,5 @@ export function getAppPlugins(app: App): Plugin[] {
 
   return bronyaConstructs.flatMap((construct) => construct.plugins)
 }
+
+export { Construct }
