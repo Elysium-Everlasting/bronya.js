@@ -119,6 +119,9 @@ importers:
 
   packages/api-construct:
     dependencies:
+      '@bronya.js/cli':
+        specifier: workspace:^
+        version: link:../cli
       '@bronya.js/core':
         specifier: workspace:^
         version: link:../core

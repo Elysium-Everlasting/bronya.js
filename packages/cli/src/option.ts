@@ -16,14 +16,13 @@ type RequiredKey<Key extends string> = `${Key} <${string}>`
 type VariadicKey<Key extends string> = `${Key} [...${string}]`
 
 /**
- * Removes the (1 or 2) starting dashes from a string.
+ * Removes leading dashes from a string.
  */
-type TrimDashes<T extends string> = T extends `--${infer KeyName}`
-  ? KeyName
-  : T extends `-${infer KeyName}`
-  ? KeyName
-  : T
+type TrimDashes<T extends string> = T extends `-${infer Key}` ? TrimDashes<Key> : T
 
+/**
+ * Trims whitespace on either side of a string.
+ */
 type TrimWhitespace<T extends string> = T extends ` ${infer Str}`
   ? TrimWhitespace<Str>
   : T extends `${infer Str} `
@@ -62,16 +61,42 @@ type CamelCase<T extends string> = T extends `${infer KeyName}-${infer Rest}`
  * - Convert to camelCase i.e. optional-key -> optionalKey
  * - Split the key on commas and represent them as a union for aliases i.e. optional-key, ok -> [optionalKey, ok]
  */
-type NormalizeKey<T extends string> = CamelCase<Split<TrimDashes<T>, ','>[number]>
+type NormalizeKey<
+  T extends string,
+  Keys extends string[] = Split<T, ','>,
+  Processed extends string[] = [],
+> = Keys extends []
+  ? Processed
+  : Keys extends [infer Key, ...infer Rest]
+  ? Key extends string
+    ? Rest extends string[]
+      ? NormalizeKey<T, Rest, [...Processed, CamelCase<TrimDashes<Key>>]>
+      : never
+    : never
+  : []
 
 /**
- * TODO: how to handle if it's a union of aliases?
+ * Normalize the key name and remove any negation, i.e. 'no-' prefix.
  *
  * @example --no-optional, --no-opt -> optional | opt
  */
-type NormalizeKeyWithoutNegation<T extends string> = CamelCase<
-  RemovePrefix<'no-', Split<TrimDashes<T>, ','>[number]>
->
+type NormalizeKeyNegation<
+  T extends string,
+  Keys extends string[] = Split<T, ','>,
+  Processed extends string[] = [],
+> = Keys extends []
+  ? Processed
+  : Keys extends [infer Key, ...infer Rest]
+  ? Key extends string
+    ? Rest extends string[]
+      ? NormalizeKeyNegation<
+          T,
+          Rest,
+          [...Processed, CamelCase<RemovePrefix<'no-', TrimDashes<Key>>>]
+        >
+      : never
+    : never
+  : []
 
 /**
  * All option types have a default type, i.e. required options are strings by default.
@@ -85,17 +110,56 @@ type NormalizeKeyWithoutNegation<T extends string> = CamelCase<
 type EvaluateOptionObject<
   Key extends string,
   DefaultType = boolean,
-> = NormalizeKey<Key> extends NormalizeKeyWithoutNegation<Key>
-  ? Record<NormalizeKey<Key>, DefaultType>
-  : Record<NormalizeKeyWithoutNegation<Key>, boolean>
+> = NormalizeKey<Key> extends NormalizeKeyNegation<Key>
+  ? Record<NormalizeKey<Key>[number], DefaultType>
+  : Record<NormalizeKeyNegation<Key>[number], boolean>
 
-export type OptionParser<T extends string> = T extends VariadicKey<infer Key>
+/**
+ * Parses a single option.
+ *
+ * @example --optional [option] -> { optional: string | undefined }
+ */
+export type ParseSingleOption<T extends string> = T extends VariadicKey<infer Key>
   ? EvaluateOptionObject<Key, string[]>
   : T extends OptionalKey<infer Key>
   ? EvaluateOptionObject<Key, string | undefined>
   : T extends RequiredKey<infer Key>
   ? EvaluateOptionObject<Key, string>
   : EvaluateOptionObject<T>
+
+/**
+ * Given an option string, split it, and process each alias individually.
+ *
+ * @example
+ * '--no-optional, --no-opt' -> ['--no-optional', '--no-opt'].map(ParseSingleOption)
+ *
+ * The aliases are 'optional' and 'opt' respectively, and each result of the map function produces a record.
+ * Merge these records into a single object.
+ */
+export type OptionAccumulator<
+  T extends string,
+  Keys extends string[] = Split<T, ','>,
+  Processed extends unknown[] = [],
+> = Keys extends []
+  ? Processed
+  : Keys extends [infer Key, ...infer Rest]
+  ? Key extends string
+    ? Rest extends string[]
+      ? OptionAccumulator<T, Rest, [...Processed, ParseSingleOption<Key>]>
+      : never
+    : never
+  : []
+
+/**
+ * After parsing each option (i.e. alias) individually
+ */
+type AccumulateRecords<T extends unknown[], Accumulated = unknown> = T extends []
+  ? Accumulated
+  : T extends [infer Head, ...infer Tail]
+  ? AccumulateRecords<Tail, Accumulated & Head>
+  : Accumulated
+
+export type OptionParser<T extends string> = AccumulateRecords<OptionAccumulator<T>>
 
 /**
  * Configure the option.

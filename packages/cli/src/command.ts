@@ -137,7 +137,7 @@ export class Command<RawArgs extends string = '', T = unknown> {
     return this
   }
 
-  action(callback: (typeof this)['commandAction']) {
+  action(callback: (args: Prettify<CommandParser<RawArgs>>, options: Prettify<T>) => unknown) {
     this.commandAction = callback
     return this
   }
