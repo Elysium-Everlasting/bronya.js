@@ -25,9 +25,7 @@ async function main() {
     })
   })
 
-  const parsed = cli.parse()
-
-  console.log(JSON.stringify(parsed, null, 2))
+  cli.parse()
 }
 
 main()
