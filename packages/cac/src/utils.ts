@@ -1,4 +1,4 @@
-import type { MriOptions, MriResult } from './mri.js'
+import type { MriOptions } from './mri.js'
 import Option from './option.js'
 
 const ANGLE_BRACKET_REGEX_GLOBAL = /<([^>]+)>/g
@@ -126,7 +126,7 @@ export function camelcase(input: string): string {
   return input.replace(/([a-z])-([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase())
 }
 
-export function setDotProp(obj: MriResult, keys: string[], val: unknown): void {
+export function setDotProp(obj: Record<string, unknown>, keys: string[], val: unknown): void {
   let current = obj
 
   for (let i = 0; i < keys.length; ++i) {
@@ -145,7 +145,7 @@ export function setDotProp(obj: MriResult, keys: string[], val: unknown): void {
         ? {}
         : []
 
-    current = current[key]
+    current = current[key] as Record<string, unknown>
   }
 }
 
@@ -154,7 +154,10 @@ export interface Transformation {
   transformFunction?: (value: unknown) => unknown
 }
 
-export function setByType(obj: MriResult, transforms: Record<string, Transformation>) {
+export function setByType(
+  obj: Record<string, unknown>,
+  transforms: Record<string, Transformation>,
+) {
   Object.keys(transforms).forEach((key) => {
     const transform = transforms[key]
 
@@ -162,7 +165,7 @@ export function setByType(obj: MriResult, transforms: Record<string, Transformat
       obj[key] = Array.prototype.concat.call([], obj[key])
 
       if (typeof transform.transformFunction === 'function') {
-        obj[key] = obj[key].map(transform.transformFunction)
+        obj[key] = (obj[key] as unknown[]).map(transform.transformFunction)
       }
     }
   })

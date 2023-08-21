@@ -72,12 +72,12 @@ class CAC extends EventEmitter {
   /**
    * Add a sub-command
    */
-  command(rawName: string, description: string = '', config?: CommandConfig) {
+  command<T extends string>(rawName: T, description: string = '', config?: CommandConfig) {
     const command = new Command(rawName, description, config, this)
 
     command.globalCommand = this.globalCommand
 
-    this.commands.push(command)
+    this.commands.push(command as Command)
 
     return command
   }
@@ -320,19 +320,21 @@ class CAC extends EventEmitter {
 
     command.checkRequiredArgs()
 
-    const actionArgs: unknown[] = []
+    const actionArgs: Record<string, unknown> = {}
 
     command.args.forEach((arg, index) => {
       if (arg.variadic) {
-        actionArgs.push(args.slice(index))
+        actionArgs[arg.key] = args.slice(index)
+        // actionArgs.push(args.slice(index))
       } else {
-        actionArgs.push(args[index])
+        actionArgs[arg.key] = args[index]
+        // actionArgs.push(args[index])
       }
     })
 
-    actionArgs.push(options)
+    // actionArgs.push(options)
 
-    return command.commandAction.apply(this, actionArgs)
+    return command.commandAction.apply(this, [actionArgs, options])
   }
 }
 

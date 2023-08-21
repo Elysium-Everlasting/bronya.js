@@ -1,6 +1,6 @@
 import CAC from './cac.js'
 import { platformInfo } from './node.js'
-import Option, { type OptionConfig } from './option.js'
+import Option, { type OptionConfig, type OptionParser } from './option.js'
 import {
   removeBrackets,
   parseBracketedKeys,
@@ -19,14 +19,41 @@ interface CommandConfig {
   ignoreOptionDefaultValue?: boolean
 }
 
+type Prettify<T> = {
+  [K in keyof T]: T[K]
+}
+
+/**
+ * Optional keys are captured as {@type string | undefined}
+ */
+type OptionalKey<Key extends string> = `[${Key}]`
+
+/**
+ * Required keys are captured as {@type string}
+ */
+type RequiredKey<Key extends string> = `<${Key}>`
+
+/**
+ * Variadic keys are captured as {@type string[]}
+ */
+type VariadicKey<Key extends string> = `[...${Key}]`
+
+type CommandParser<T extends string> = T extends `${infer L}${VariadicKey<infer Key>}${infer R}`
+  ? Record<Key, string> & CommandParser<L> & CommandParser<R>
+  : T extends `${infer L}${OptionalKey<infer Key>}${infer R}`
+  ? Record<Key, string> & CommandParser<L> & CommandParser<R>
+  : T extends `${infer L}${RequiredKey<infer Key>}${infer R}`
+  ? Record<Key, string> & CommandParser<L> & CommandParser<R>
+  : unknown
+
 type HelpCallback = (sections: HelpSection[]) => void | HelpSection[]
 
 type CommandExample = ((bin: string) => string) | string
 
-class Command {
-  options: Option[]
+class Command<RawArgs extends string = '', T = unknown> {
+  options: Option[] = []
 
-  aliasNames: string[]
+  aliasNames: string[] = []
 
   /*
    * Parsed command name
@@ -35,29 +62,26 @@ class Command {
 
   args: ReturnType<typeof parseBracketedKeys>
 
-  commandAction?: (...args: unknown[]) => unknown
+  commandAction?: (args: Prettify<CommandParser<RawArgs>>, options: T) => unknown
 
   usageText?: string
 
   versionNumber?: string
 
-  examples: CommandExample[]
+  examples: CommandExample[] = []
 
   helpCallback?: HelpCallback
 
   globalCommand?: GlobalCommand
 
   constructor(
-    public rawName: string,
+    public rawName: RawArgs,
     public description: string,
     public config: CommandConfig = {},
     public cli: CAC,
   ) {
-    this.options = []
-    this.aliasNames = []
     this.name = removeBrackets(rawName)
     this.args = parseBracketedKeys(rawName)
-    this.examples = []
   }
 
   usage(text: string) {
@@ -93,9 +117,13 @@ class Command {
    * @param description Option description.
    * @param config Option config.
    */
-  option(rawName: string, description: string, config?: OptionConfig) {
+  option<RawName extends string>(
+    rawName: RawName,
+    description: string,
+    config?: OptionConfig,
+  ): Command<RawArgs, T & OptionParser<RawName>> {
     this.options.push(new Option(rawName, description, config))
-    return this
+    return this as Command<RawArgs, T & OptionParser<RawName>>
   }
 
   alias(name: string) {
@@ -103,7 +131,7 @@ class Command {
     return this
   }
 
-  action(callback: (...args: unknown[]) => unknown) {
+  action(callback: (typeof this)['commandAction']) {
     this.commandAction = callback
     return this
   }
@@ -277,7 +305,7 @@ class Command {
 
 const GLOBAL_SYMBOL = '@@global@@'
 
-class GlobalCommand extends Command {
+class GlobalCommand extends Command<typeof GLOBAL_SYMBOL> {
   constructor(cli: CAC) {
     super(GLOBAL_SYMBOL, '', {}, cli)
   }
