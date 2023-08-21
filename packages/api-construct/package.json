@@ -26,7 +26,6 @@
     "cdk"
   ],
   "type": "module",
-  "bin": {},
   "exports": {
     "./api": {
       "types": "./dist/api.d.ts",

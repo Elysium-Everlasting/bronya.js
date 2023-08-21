@@ -185,11 +185,9 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
    * Merge.
    */
   const developmentOptions = {
-    protocol: 'http',
-    host: 'localhost',
-    port: 8080,
-    ...api.config.development,
-    ...overrides,
+    protocol: overrides.protocol ?? api.config.development?.protocol ?? 'http',
+    host: overrides.host ?? api.config.development?.host ?? 'localhost',
+    port: overrides.port ?? api.config.development?.port ?? 8080,
   }
 
   const currentProject = getClosestProjectDirectory()

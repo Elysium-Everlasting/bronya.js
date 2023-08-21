@@ -9,12 +9,12 @@ export const BronyaSymbol = 'Bronya Construct'
  * Augmented construct.
  */
 export class BronyaConstruct extends Construct {
-  scope = BronyaSymbol
+  bronya = BronyaSymbol
 
   plugins: Plugin[] = []
 
   static isBronyaConstruct(value: unknown): value is BronyaConstruct {
-    return Construct.isConstruct(value) && (value as BronyaConstruct).scope === BronyaSymbol
+    return Construct.isConstruct(value) && (value as BronyaConstruct).bronya === BronyaSymbol
   }
 
   constructor(scope: Construct, id: string) {
@@ -23,7 +23,7 @@ export class BronyaConstruct extends Construct {
 }
 
 export function isBronyaConstruct(construct: unknown): construct is BronyaConstruct {
-  return Construct.isConstruct(construct) && (construct as BronyaConstruct).scope === BronyaSymbol
+  return Construct.isConstruct(construct) && (construct as BronyaConstruct).bronya === BronyaSymbol
 }
 
 interface PluginWithOrigin<T extends Construct = Construct> {

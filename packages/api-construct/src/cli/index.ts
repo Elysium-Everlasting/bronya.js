@@ -2,9 +2,8 @@ import type { Plugin } from '@bronya.js/core'
 
 import type { Api } from '../api.js'
 
-import { startExpressApiDevelopmentServer } from './commands/dev.js'
-
 /**
+ * TODO.
  */
 interface CreateApiPluginOptions {}
 
@@ -24,7 +23,9 @@ export function createApiPlugin(options: CreateApiPluginOptions = {}): Plugin<Ap
         .command('dev-api [directory]')
         .option('-p <port>, --port <host>', 'Port number for the express development server.')
         .action(async (_args, options) => {
-          startExpressApiDevelopmentServer(api, options)
+          api.dev({
+            port: options.port ? parseInt(options.port, 10) : undefined,
+          })
         })
     },
   }

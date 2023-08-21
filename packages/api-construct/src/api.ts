@@ -9,8 +9,9 @@ import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import * as aws_core from 'aws-cdk-lib/core'
 import type { BuildOptions } from 'esbuild'
 
-import type { ServerOptions } from './cli/commands/dev.js'
+import { startExpressApiDevelopmentServer, type ServerOptions } from './cli/commands/dev.js'
 import { createApiPlugin } from './cli/index.js'
+import { warmerRequestBody } from './constants.js'
 import {
   findAllProjects,
   getClosestProjectDirectory,
@@ -169,20 +170,23 @@ export class Api extends BronyaConstruct {
 
   public root: string
 
-  public readonly config: ApiProps
-
   routes: Record<string, RouteInfo> = {}
 
-  constructor(scope: Construct, id: string, config: ApiProps) {
+  constructor(
+    readonly scope: Construct,
+    readonly id: string,
+    readonly config: ApiProps,
+  ) {
     super(scope, id)
-
-    this.config = config
 
     this.root = config.root ?? getClosestProjectDirectory()
 
     this.plugins.push(createApiPlugin())
   }
 
+  /**
+   * Initialize the route configs.
+   */
   async init() {
     const apiRoutesDirectory = path.resolve(this.root, this.config.directory)
 
@@ -276,11 +280,131 @@ export class Api extends BronyaConstruct {
       }),
     )
   }
+
+  /**
+   * Allocate AWS resources with the AWS-CDK.
+   */
+  async synth(props: SynthProps = {}) {
+    const api = new aws_apigateway.RestApi(
+      this,
+      `${this.id}-REST-API`,
+      props.constructs?.restApiProps?.(this, this.id),
+    )
+
+    const functions: Record<string, FunctionResources> = {}
+
+    await Promise.all(
+      Object.entries(this.routes).map(async ([directory, route]) => {
+        const resource = route.endpoint.split('/').reduce((resource, route) => {
+          return resource.getResource(route) ?? resource.addResource(route)
+        }, api.root)
+
+        /**
+         * Relative out directory used to set handler for AWS Lambda.
+         */
+        const outDirectory = path.relative(directory, route.outDirectory)
+
+        getNamedExports(path.join(route.outDirectory, route.exitPoint))
+          // .filter(isHttpMethod)
+          .forEach((httpMethod) => {
+            const getFunctionProps =
+              props.constructs?.functionProps ?? route.constructs?.functionProps
+
+            const getLambdaIntegrationOptions =
+              props.constructs?.lambdaIntegrationOptions ??
+              route.constructs?.lambdaIntegrationOptions
+
+            const getMethodOptions =
+              props.constructs?.methodOptions ?? route.constructs?.methodOptions
+
+            const functionName = `${this.id}-${httpMethod}`.replace(/\//g, '-')
+
+            const customFunctionProps = getFunctionProps?.(this, this.id)
+
+            const defaultFunctionProps: aws_lambda.FunctionProps = {
+              functionName,
+              runtime: aws_lambda.Runtime.NODEJS_18_X,
+              code: aws_lambda.Code.fromAsset(directory, { exclude: ['node_modules'] }),
+              handler: path.join(outDirectory, route.exitPoint.replace(/.js$/, `.${httpMethod}`)),
+              architecture: aws_lambda.Architecture.ARM_64,
+              environment: { ...route.environment },
+              timeout: aws_core.Duration.seconds(15),
+              memorySize: 512,
+            }
+
+            const functionProps = { ...defaultFunctionProps, ...customFunctionProps }
+
+            const handler = new aws_lambda.Function(
+              this,
+              `${this.id}-${functionProps.functionName}-handler`,
+              functionProps,
+            )
+
+            const methodAndRoute = `${httpMethod} ${route.endpoint}`
+
+            const lambdaIntegrationOptions = getLambdaIntegrationOptions?.(
+              this,
+              this.id,
+              methodAndRoute,
+            )
+
+            const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+              handler,
+              lambdaIntegrationOptions,
+            )
+
+            const methodOptions = getMethodOptions?.(this, this.id, methodAndRoute)
+
+            resource.addMethod(httpMethod, lambdaIntegration, methodOptions)
+
+            const functionResources: FunctionResources = {
+              functionProps,
+              function: handler,
+              lambdaIntegration,
+              lambdaIntegrationOptions,
+              methodOptions,
+            }
+            if (props.constructs?.includeWarmers) {
+              const warmingTarget = new aws_events_targets.LambdaFunction(handler, {
+                event: aws_events.RuleTargetInput.fromObject({ body: warmerRequestBody }),
+              })
+
+              const warmingRule = new aws_events.Rule(
+                this,
+                `${this.id}-${functionProps.functionName}-warming-rule`,
+                {
+                  schedule: aws_events.Schedule.rate(aws_core.Duration.minutes(5)),
+                },
+              )
+
+              warmingRule.addTarget(warmingTarget)
+
+              functionResources.warmingTarget = warmingTarget
+              functionResources.warmingRule = warmingRule
+            }
+
+            functions[httpMethod] = functionResources
+          })
+      }),
+    )
+
+    return {
+      api,
+      functions,
+    }
+  }
+
+  /**
+   * Start an Express.js development server.
+   */
+  async dev(options?: ServerOptions) {
+    return startExpressApiDevelopmentServer(this, options)
+  }
 }
 
 /**
  * A special construct that overrides the default settings set by {@link Api} for a specific API route.
- * Create a `klein.config.ts` file and create an {@link aws_core.App} as usual, but with this construct to override.
+ * Create a config file and create an {@link aws_core.App} as usual, but with this construct to override.
  */
 export class ApiPropsOverride extends BronyaConstruct {
   public static readonly type = 'api-props-override' as const
