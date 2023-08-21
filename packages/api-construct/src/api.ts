@@ -151,6 +151,8 @@ export interface FunctionResources {
   warmingRule?: aws_events.Rule
 }
 
+/**
+ */
 export class Api extends BronyaConstruct {
   public static readonly type = 'API' as const
 
@@ -173,7 +175,7 @@ export class Api extends BronyaConstruct {
 
     this.root = config.root ?? getClosestProjectDirectory()
 
-    this.plugins = [createApiPlugin()]
+    this.plugins.push(createApiPlugin())
   }
 
   async init() {
@@ -256,7 +258,7 @@ export class Api extends BronyaConstruct {
  * A special construct that overrides the default settings set by {@link Api} for a specific API route.
  * Create a `klein.config.ts` file and create an {@link aws_core.App} as usual, but with this construct to override.
  */
-export class ApiPropsOverride extends Construct {
+export class ApiPropsOverride extends BronyaConstruct {
   public static readonly type = 'api-props-override' as const
 
   public readonly type = ApiPropsOverride.type
@@ -265,7 +267,7 @@ export class ApiPropsOverride extends Construct {
    * Used on initialized constructs, i.e. part of a node's children, to determine if they are of this type.
    */
   public static isApiRouteConfigOverride(x: unknown): x is ApiPropsOverride {
-    return Construct.isConstruct(x) && 'type' in x && x['type'] === ApiPropsOverride.type
+    return BronyaConstruct.isConstruct(x) && 'type' in x && x['type'] === ApiPropsOverride.type
   }
 
   public config: DeepPartial<ApiProps>

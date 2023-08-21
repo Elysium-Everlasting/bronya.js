@@ -9,18 +9,20 @@ async function main() {
 
   const app = await loadAppFromConfig()
 
-  const plugins = getAppPlugins(app)
+  const pluginsWithOrigin = getAppPlugins(app)
 
-  plugins.forEach((plugin) => {
-    switch (plugin.type) {
-      case 'cli': {
-        plugin.extend?.(app, cli)
-        break
+  pluginsWithOrigin.forEach(({ plugins, origin }) => {
+    plugins.forEach((plugin) => {
+      switch (plugin.type) {
+        case 'cli': {
+          plugin.extend?.(origin, cli, app)
+          break
+        }
+
+        default:
+          break
       }
-
-      default:
-        break
-    }
+    })
   })
 
   const parsed = cli.parse()

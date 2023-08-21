@@ -1,8 +1,7 @@
+import type { App } from 'aws-cdk-lib/core'
 import { Construct } from 'constructs'
 
-import type { Plugin } from './plugin'
-
-import { type App } from '.'
+import type { Plugin } from './plugin.js'
 
 export const BronyaSymbol = 'Bronya Construct'
 
@@ -25,6 +24,11 @@ export class BronyaConstruct extends Construct {
 
 export function isBronyaConstruct(construct: unknown): construct is BronyaConstruct {
   return Construct.isConstruct(construct) && (construct as BronyaConstruct).scope === BronyaSymbol
+}
+
+interface PluginWithOrigin<T extends Construct = Construct> {
+  plugins: Plugin<T>[]
+  origin: T
 }
 
 /**
@@ -57,10 +61,17 @@ export function findNestedBronyaConstructs(constructs: Construct[]): BronyaConst
   return bronyaConstructs
 }
 
-export function getAppPlugins(app: App): Plugin[] {
+export function getAppPlugins<T extends BronyaConstruct = BronyaConstruct>(
+  app: App,
+): PluginWithOrigin<T>[] {
   const bronyaConstructs = findNestedBronyaConstructs(app.node.children)
 
-  return bronyaConstructs.flatMap((construct) => construct.plugins)
+  return bronyaConstructs.flatMap((construct) => {
+    return {
+      origin: construct as T,
+      plugins: construct.plugins,
+    }
+  })
 }
 
 export { Construct }
