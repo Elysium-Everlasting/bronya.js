@@ -1,6 +1,6 @@
 import { App, Stack } from 'aws-cdk-lib/core'
 import { isCdk } from '@bronya.js/core'
-import { Api } from '@bronya.js/api-construct/api'
+import { Api } from '@bronya.js/api-construct'
 
 class MyStack extends Stack {
   api = new Api(this, 'api', {

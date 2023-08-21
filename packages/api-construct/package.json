@@ -25,9 +25,11 @@
     "aws",
     "cdk"
   ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "exports": {
-    "./api": {
+    ".": {
       "types": "./dist/api.d.ts",
       "import": "./dist/api.js",
       "require": "./dist/api.cjs",
@@ -36,7 +38,7 @@
   },
   "typesVersion": {
     "*": {
-      "./api": [
+      ".": [
         "dist/api.d.ts"
       ]
     }
