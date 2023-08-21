@@ -295,16 +295,24 @@ export class Api extends BronyaConstruct {
 
     await Promise.all(
       Object.entries(this.routes).map(async ([directory, route]) => {
-        const resource = route.endpoint.split('/').reduce((resource, route) => {
-          return resource.getResource(route) ?? resource.addResource(route)
-        }, api.root)
+        /**
+         * In-case the endpoint starts with a slash, trim it.
+         *
+         * @example /v1/rest/calendar -> v1/rest/calendar
+         */
+        const resource = route.endpoint
+          .replace(/^\//, '')
+          .split('/')
+          .reduce((resource, route) => {
+            return resource.getResource(route) ?? resource.addResource(route)
+          }, api.root)
 
         /**
          * Relative out directory used to set handler for AWS Lambda.
          */
         const outDirectory = path.relative(directory, route.outDirectory)
 
-        getNamedExports(path.join(route.outDirectory, route.exitPoint))
+        route.methods
           // .filter(isHttpMethod)
           .forEach((httpMethod) => {
             const getFunctionProps =
@@ -317,7 +325,7 @@ export class Api extends BronyaConstruct {
             const getMethodOptions =
               props.constructs?.methodOptions ?? route.constructs?.methodOptions
 
-            const functionName = `${this.id}-${httpMethod}`.replace(/\//g, '-')
+            const functionName = `${this.id}-${route.endpoint}-${httpMethod}`.replace(/\//g, '-')
 
             const customFunctionProps = getFunctionProps?.(this, this.id)
 

@@ -98,6 +98,9 @@ importers:
         specifier: ^2.92.0
         version: 2.92.0(constructs@10.2.69)
     devDependencies:
+      aws-cdk:
+        specifier: ^2.92.0
+        version: 2.92.0
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -3257,6 +3260,17 @@ packages:
       - semver
       - table
       - yaml
+
+  /aws-cdk@2.92.0:
+    resolution:
+      {
+        integrity: sha512-9aAWJvZWSBJQxcsDopXYUAm6/pGz6vOQy2zfkn+YBuBkNelvW+ok15KPY4xn5m76tYnN79W03Gnfp/nxZUlcww==,
+      }
+    engines: { node: '>= 14.15.0' }
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
 
   /balanced-match@1.0.2:
     resolution:
