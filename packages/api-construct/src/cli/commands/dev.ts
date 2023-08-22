@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { getClosestProjectDirectory } from '@bronya.js/core/utils'
@@ -202,6 +203,8 @@ export interface ServerOptions {
  * @param overrides Override the development server options from the API construct's config.
  */
 export async function startExpressApiDevelopmentServer(api: Api, overrides: ServerOptions = {}) {
+  const require = createRequire(__filename)
+
   /**
    * Merge.
    */
@@ -289,7 +292,13 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
       apiRouteInfo.exitPoint,
     )
 
-    const internalHandlers = await import(`${file}?update=${Date.now()}`)
+    /**
+     * Possible TODO/FIXME: this leaks memory.
+     */
+    const internalHandlers =
+      apiRouteInfo.esbuild.format === 'cjs'
+        ? require(file)
+        : await import(`${file}?update=${Date.now()}`)
 
     if (internalHandlers == null) {
       consola.error(`🚨 Failed to load ${apiRouteInfo.directory}. No exports found.`)
@@ -373,6 +382,6 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
  *
  * @example '/v1/rest/{id}/{name}' -> '/v1/rest/:id/:name'
  */
-function apiGatewayPathToExpressPath(apiGatewayPath: string): string {
+export function apiGatewayPathToExpressPath(apiGatewayPath: string): string {
   return apiGatewayPath.replace(/{([^}]+)}/g, ':$1')
 }

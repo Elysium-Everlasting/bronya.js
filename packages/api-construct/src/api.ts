@@ -24,37 +24,49 @@ import {
  */
 export interface ApiProps {
   /**
-   * The root of where to define API routes relative to.
+   * The project root directory.
    *
    * @default process.cwd()
+   *
+   * @example
+   *  root
+   * ├──  package.json
+   * └──  src
+   *     ├──  sub-route
+   *     │   └──  +endpoint.ts
+   *     └──  +endpoint.ts
    */
   root: string
 
   /**
-   * Directory to look for API routes, i.e. sub-projects. Relative from {@link root}.
+   * Directory to look for API routes, Relative from {@link root}.
    *
    * @default 'src'
    */
   directory: string
 
   /**
-   * The file exporting API handlers. Relative from {@link directory}.
+   * Filename indicating an endpoint.
    *
    * @default '+endpoint.ts'
    */
   entryPoint: string
 
   /**
-   * The directory to build the files to. Relative from {@link directory}.
+   * The cache directory to build the endpoint handler files to.
+   *
+   * This is created in every directory with an endpoint.
    *
    * @default '.bronya'
    */
   outDirectory: string
 
   /**
-   * The built output file, relative from {@link outDirectory}, **excluding the extension**.
+   * The built output file, relative from {@link outDirectory}, **with the JS extension**.
    *
-   * @default path.basename of {@link entryPoint} without the 'js' extension.
+   * This is the file that the AWS Lambda Function will set as the handler.
+   *
+   * @default 'handler.js'
    */
   exitPoint: string
 
@@ -65,6 +77,8 @@ export interface ApiProps {
 
   /**
    * ESBuild options.
+   *
+   * @remarks The format **MUST BE** either 'cjs' or 'esm', **NOT** 'iife'.
    */
   esbuild: BuildOptions
 
@@ -241,13 +255,13 @@ export class Api extends BronyaConstruct {
         },
       }
 
-      const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? '+endpoint.ts')
+      const entryPoint = path.resolve(directory, mergedProps.entryPoint)
 
       const exitPoint = mergedProps.exitPoint ?? path.basename(entryPoint)
 
       const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
 
-      const outDirectory = path.resolve(directory, mergedProps.outDirectory ?? 'dist')
+      const outDirectory = path.resolve(directory, mergedProps.outDirectory)
 
       const routeInfo = {
         root: this.root,
@@ -283,16 +297,18 @@ export class Api extends BronyaConstruct {
     await Promise.all(
       Object.entries(this.routes).map(async ([directory, route]) => {
         /**
+         * Normalize the endpoint to remove the leading slash.
+         */
+        const routeEndpoint = path.normalize(route.endpoint).replace(/^\//, '')
+
+        /**
          * In-case the endpoint starts with a slash, trim it.
          *
          * @example /v1/rest/calendar -> v1/rest/calendar
          */
-        const resource = route.endpoint
-          .replace(/^\//, '')
-          .split('/')
-          .reduce((resource, route) => {
-            return resource.getResource(route) ?? resource.addResource(route)
-          }, api.root)
+        const resource = routeEndpoint.split('/').reduce((resource, route) => {
+          return route ? resource.getResource(route) ?? resource.addResource(route) : resource
+        }, api.root)
 
         /**
          * Relative out directory used to set handler for AWS Lambda.
@@ -312,7 +328,7 @@ export class Api extends BronyaConstruct {
             const getMethodOptions =
               props.constructs?.methodOptions ?? route.constructs?.methodOptions
 
-            const functionName = `${this.id}-${route.endpoint}-${httpMethod}`.replace(/\//g, '-')
+            const functionName = `${this.id}-${routeEndpoint}-${httpMethod}`.replace(/\//g, '-')
 
             const customFunctionProps = getFunctionProps?.(this, this.id)
 
@@ -320,7 +336,10 @@ export class Api extends BronyaConstruct {
               functionName,
               runtime: aws_lambda.Runtime.NODEJS_18_X,
               code: aws_lambda.Code.fromAsset(directory, { exclude: ['node_modules'] }),
-              handler: path.join(outDirectory, route.exitPoint.replace(/.js$/, `.${httpMethod}`)),
+              handler: path.join(
+                outDirectory,
+                route.exitPoint.replace(/\..?js$/, `.${httpMethod}`),
+              ),
               architecture: aws_lambda.Architecture.ARM_64,
               environment: { ...route.environment },
               timeout: aws_core.Duration.seconds(15),
@@ -335,7 +354,7 @@ export class Api extends BronyaConstruct {
               functionProps,
             )
 
-            const methodAndRoute = `${httpMethod} ${route.endpoint}`
+            const methodAndRoute = `${httpMethod} ${routeEndpoint}`
 
             const lambdaIntegrationOptions = getLambdaIntegrationOptions?.(
               this,
