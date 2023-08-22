@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- 0be42b1: feat: convert api gateway path to express path
+
 ## 0.7.1
 
 ### Patch Changes
