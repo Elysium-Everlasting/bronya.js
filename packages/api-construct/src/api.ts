@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { findConfigFile, loadAppFromConfig, BronyaConstruct, Construct } from '@bronya.js/core'
+import { loadAppFromConfig, BronyaConstruct, Construct } from '@bronya.js/core'
 import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as aws_events from 'aws-cdk-lib/aws-events'
 import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'
@@ -197,119 +197,79 @@ export class Api extends BronyaConstruct {
 
     const projects = findAllProjects(apiRoutesDirectory)
 
-    await Promise.all(
-      projects.map(async (directory) => {
-        const configFile = findConfigFile(directory)
+    const apiRoutesRootDirectory = path.resolve(this.root, apiRoutesDirectory)
 
-        if (!configFile) {
-          const entryPoint = path.resolve(directory, this.config.entryPoint ?? 'src/index.ts')
+    const processDirectory = async (
+      directory: string,
+      endpoint = path.join('/', path.relative(apiRoutesRootDirectory, directory)),
+    ) => {
+      /**
+       * Try loading any {@link ApiOverride} construct from the current project.
+       */
+      const apiOverride = await loadAppFromConfig(directory)
+        .then((app) => getApiOverride(app))
+        .then((apiOverride) => apiOverride?.config)
+        .catch(() => undefined)
 
-          const exitPoint = this.config.exitPoint ?? path.basename(entryPoint)
+      const mergedProps = {
+        ...apiOverride,
+        ...this.config,
+        esbuild: {
+          ...apiOverride?.esbuild,
+          ...this.config.esbuild,
+        },
+        development: {
+          ...apiOverride?.development,
+          ...this.config.development,
+        },
+        constructs: {
+          ...apiOverride?.constructs,
+          ...this.config.constructs,
+        },
+        environment: {
+          ...apiOverride?.environment,
+          ...this.config.environment,
+        },
+      }
 
-          const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
+      const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? 'src/index.ts')
 
-          const outDirectory = path.resolve(directory, this.config.outDirectory ?? 'dist')
+      const exitPoint = mergedProps.exitPoint ?? path.basename(entryPoint)
 
-          const endpoint = path.join(
-            '/',
-            path.relative(path.resolve(this.root, apiRoutesDirectory), directory),
-          )
+      const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
 
-          const routeInfo = {
-            directory,
-            endpoint,
-            entryPoint,
-            exitPoint,
-            methods,
-            outDirectory,
-            esbuild: this.config.esbuild,
-            environment: this.config.environment,
-            constructs: this.config.constructs,
-          } satisfies RouteInfo
+      const outDirectory = path.resolve(directory, mergedProps.outDirectory ?? 'dist')
 
-          this.routes[directory] = routeInfo
+      const routeInfo = {
+        directory,
+        endpoint,
+        entryPoint,
+        exitPoint,
+        methods,
+        outDirectory,
+        esbuild: mergedProps.esbuild,
+        environment: mergedProps.environment,
+        constructs: mergedProps.constructs,
+      } satisfies RouteInfo
 
-          if (this.config.routes != null) {
-            Object.entries(this.config.routes)
-              .filter(([, value]) => value === endpoint)
-              .forEach(([key, value]) => {
-                this.routes[key] = {
-                  ...routeInfo,
-                  endpoint: value,
-                }
-              })
-          }
+      this.routes[directory] = routeInfo
+    }
 
-          return
-        }
+    await Promise.all(projects.map(async (directory) => processDirectory(directory)))
 
-        /**
-         * Load the app from the current project.
-         */
-        const app = await loadAppFromConfig(directory)
-
-        const apiOverride = await getApiOverride(app)
-
-        const mergedProps = {
-          ...apiOverride?.config,
-          ...this.config,
-          esbuild: {
-            ...apiOverride?.config?.esbuild,
-            ...this.config.esbuild,
-          },
-          development: {
-            ...apiOverride?.config?.development,
-            ...this.config.development,
-          },
-          constructs: {
-            ...apiOverride?.config?.constructs,
-            ...this.config.constructs,
-          },
-          environment: {
-            ...apiOverride?.config?.environment,
-            ...this.config.environment,
-          },
-        }
-
-        const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? 'src/index.ts')
-
-        const exitPoint = mergedProps.exitPoint ?? path.basename(entryPoint)
-
-        const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
-
-        const outDirectory = path.resolve(directory, mergedProps.outDirectory ?? 'dist')
-
-        const endpoint = path.join(
-          '/',
-          path.relative(path.resolve(this.root, apiRoutesDirectory), directory),
-        )
-
-        const routeInfo = {
-          directory,
-          endpoint,
-          entryPoint,
-          exitPoint,
-          methods,
-          outDirectory,
-          esbuild: mergedProps.esbuild,
-          environment: mergedProps.environment,
-          constructs: mergedProps.constructs,
-        } satisfies RouteInfo
-
-        this.routes[directory] = routeInfo
-
-        if (this.config.routes != null) {
-          Object.entries(this.config.routes)
-            .filter(([, value]) => value === endpoint)
-            .forEach(([key, value]) => {
-              this.routes[key] = {
-                ...routeInfo,
-                endpoint: value,
-              }
-            })
-        }
-      }),
-    )
+    /**
+     * Explicitly routed endpoints are [endpoint, directory] pairs.
+     *
+     * Automatically parsed directory-based routing assumes the endpoint is the directory's path
+     * relative from {@link apiRoutesRootDirectory}.
+     */
+    if (this.config.routes) {
+      await Promise.all(
+        Object.entries(this.config.routes).map(async ([endpoint, directory]) => {
+          return processDirectory(directory, endpoint)
+        }),
+      )
+    }
   }
 
   /**
