@@ -1,5 +1,16 @@
 # @bronya.js/core
 
+## 0.7.0
+
+### Minor Changes
+
+- 0053ec7: feat: improved api override searching
+
+### Patch Changes
+
+- Updated dependencies [0053ec7]
+  - @bronya.js/cli@0.7.0
+
 ## 0.6.2
 
 ### Patch Changes

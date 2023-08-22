@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.7.0
+
+### Minor Changes
+
+- 0053ec7: feat: improved api override searching
+
 ## 0.6.2
 
 ### Patch Changes
