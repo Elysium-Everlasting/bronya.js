@@ -1,5 +1,16 @@
 # @bronya.js/core
 
+## 0.6.0
+
+### Minor Changes
+
+- be45cca: fix: adjust release workflow
+
+### Patch Changes
+
+- Updated dependencies [be45cca]
+  - @bronya.js/cli@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes
