@@ -31,6 +31,7 @@
     "format": "prettier --write --cache .",
     "lint": "eslint --cache .",
     "release": "changeset publish",
+    "build": "turbo run build",
     "test": "vitest"
   },
   "devDependencies": {
