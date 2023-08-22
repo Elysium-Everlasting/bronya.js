@@ -1,5 +1,16 @@
 # @bronya.js/core
 
+## 0.4.0
+
+### Minor Changes
+
+- 4527e73: fix: forgot to specify files field properly in package.json
+
+### Patch Changes
+
+- Updated dependencies [4527e73]
+  - @bronya.js/cli@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

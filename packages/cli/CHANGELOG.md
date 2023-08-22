@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- 4527e73: fix: forgot to specify files field properly in package.json
+
 ## 0.3.0
 
 ### Minor Changes
