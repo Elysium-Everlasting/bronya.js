@@ -1,5 +1,14 @@
 # @bronya.js/api-construct
 
+## 0.7.1
+
+### Patch Changes
+
+- 6fdf84a: feat: improve matching for finding subprojects
+- Updated dependencies [6fdf84a]
+  - @bronya.js/core@0.7.1
+  - @bronya.js/cli@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes
