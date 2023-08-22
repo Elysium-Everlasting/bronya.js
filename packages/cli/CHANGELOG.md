@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.7.1
+
+### Patch Changes
+
+- 6fdf84a: feat: improve matching for finding subprojects
+
 ## 0.7.0
 
 ### Minor Changes
