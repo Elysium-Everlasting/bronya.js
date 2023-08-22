@@ -46,12 +46,12 @@ type Split<
 /**
  * Removes any prefix from a string.
  */
-type RemovePrefix<Prefix extends string, T extends string> = T extends `${Prefix}${infer KeyName}`
-  ? KeyName
+type RemovePrefix<Prefix extends string, T extends string> = T extends `${Prefix}${infer Str}`
+  ? Str
   : T
 
-type CamelCase<T extends string> = T extends `${infer KeyName}-${infer Rest}`
-  ? `${KeyName}${Capitalize<CamelCase<Rest>>}`
+type CamelCase<T extends string> = T extends `${infer Head}-${infer Tail}`
+  ? `${Head}${Capitalize<CamelCase<Tail>>}`
   : T
 
 /**
@@ -67,10 +67,10 @@ type NormalizeKey<
   Processed extends string[] = [],
 > = Keys extends []
   ? Processed
-  : Keys extends [infer Key, ...infer Rest]
-  ? Key extends string
-    ? Rest extends string[]
-      ? NormalizeKey<T, Rest, [...Processed, CamelCase<TrimDashes<Key>>]>
+  : Keys extends [infer Head, ...infer Tail]
+  ? Head extends string
+    ? Tail extends string[]
+      ? NormalizeKey<T, Tail, [...Processed, CamelCase<TrimDashes<Head>>]>
       : never
     : never
   : []
@@ -86,13 +86,13 @@ type NormalizeKeyNegation<
   Processed extends string[] = [],
 > = Keys extends []
   ? Processed
-  : Keys extends [infer Key, ...infer Rest]
-  ? Key extends string
-    ? Rest extends string[]
+  : Keys extends [infer Head, ...infer Tail]
+  ? Head extends string
+    ? Tail extends string[]
       ? NormalizeKeyNegation<
           T,
-          Rest,
-          [...Processed, CamelCase<RemovePrefix<'no-', TrimDashes<Key>>>]
+          Tail,
+          [...Processed, CamelCase<RemovePrefix<'no-', TrimDashes<Head>>>]
         >
       : never
     : never
@@ -142,10 +142,10 @@ export type OptionAccumulator<
   Processed extends unknown[] = [],
 > = Keys extends []
   ? Processed
-  : Keys extends [infer Key, ...infer Rest]
-  ? Key extends string
-    ? Rest extends string[]
-      ? OptionAccumulator<T, Rest, [...Processed, ParseSingleOption<Key>]>
+  : Keys extends [infer Head, ...infer Tail]
+  ? Head extends string
+    ? Tail extends string[]
+      ? OptionAccumulator<T, Tail, [...Processed, ParseSingleOption<Head>]>
       : never
     : never
   : []
@@ -159,7 +159,9 @@ type AccumulateRecords<T extends unknown[], Accumulated = unknown> = T extends [
   ? AccumulateRecords<Tail, Accumulated & Head>
   : Accumulated
 
-export type OptionParser<T extends string> = AccumulateRecords<OptionAccumulator<T>>
+type Prettify<T> = { [K in keyof T]: T[K] }
+
+export type OptionParser<T extends string> = Prettify<AccumulateRecords<OptionAccumulator<T>>>
 
 /**
  * Configure the option.
@@ -177,13 +179,13 @@ export interface OptionConfig {
  * @example
  *
  * ```ts
- * const optionalOption = new Option('--optional [optional]', 'description')
+ * const optionalOption = new Option('--optional [optionalValue]', 'description')
  *        ^? Option<{ optional: string | undefined }>
  *
- * const requiredOption = new Option('--required <required>', 'description')
+ * const requiredOption = new Option('--required <requiredValue>', 'description')
  *        ^? Option<{ required: string  }>
  *
- * const variadicOption = new Option('--variadic [...variadic]', 'description')
+ * const variadicOption = new Option('--variadic [...variadicValue]', 'description')
  *        ^? Option<{ variadic: string[]  }>
  * ```
  */
