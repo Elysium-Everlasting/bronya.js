@@ -310,12 +310,14 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
           return
         }
 
-        console.log(`Route loaded: ${expressMethod}: ${apiRouteInfo.endpoint}`)
+        const endpoint = apiGatewayPathToExpressPath(apiRouteInfo.endpoint)
+
+        console.log(`Route loaded: ${expressMethod}: ${endpoint}`)
 
         /**
          * @example `router.get('/v1/rest/endpoint', wrapExpressHandler(handler))`
          */
-        apiRouteRouter[expressMethod](apiRouteInfo.endpoint, wrapExpressHandler(handler))
+        apiRouteRouter[expressMethod](endpoint, wrapExpressHandler(handler))
       })
   }
 
@@ -364,4 +366,13 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
 
     refreshRouter()
   })
+}
+
+/**
+ * Convert path parameters from an API Gateway path to an Express.js path.
+ *
+ * @example '/v1/rest/{id}/{name}' -> '/v1/rest/:id/:name'
+ */
+function apiGatewayPathToExpressPath(apiGatewayPath: string): string {
+  return apiGatewayPath.replace(/{([^}]+)}/g, ':$1')
 }
