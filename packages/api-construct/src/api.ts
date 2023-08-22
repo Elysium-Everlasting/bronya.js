@@ -13,7 +13,7 @@ import { startExpressApiDevelopmentServer, type ServerOptions } from './cli/comm
 import { createApiPlugin } from './cli/index.js'
 import { warmerRequestBody } from './constants.js'
 import {
-  findAllProjects,
+  findDirectoriesWithFile,
   getClosestProjectDirectory,
   getNamedExports,
   type DeepPartial,
@@ -25,23 +25,29 @@ import {
 export interface ApiProps {
   /**
    * The root of where to define API routes relative to.
+   *
+   * @default process.cwd()
    */
-  root?: string
+  root: string
 
   /**
    * Directory to look for API routes, i.e. sub-projects. Relative from {@link root}.
+   *
+   * @default 'src'
    */
   directory: string
 
   /**
    * The file exporting API handlers. Relative from {@link directory}.
    *
-   * @example src/index.ts
+   * @default '+endpoint.ts'
    */
   entryPoint: string
 
   /**
    * The directory to build the files to. Relative from {@link directory}.
+   *
+   * @default '.bronya'
    */
   outDirectory: string
 
@@ -55,27 +61,17 @@ export interface ApiProps {
   /**
    * Controls how/what AWS constructs are created.
    */
-  constructs?: ApiConstructProps | null | void
+  constructs: ApiConstructProps | null | void
 
   /**
    * ESBuild options.
    */
-  esbuild?: BuildOptions
-
-  /**
-   * Settings for the Express.js development server.
-   */
-  development?: ServerOptions
+  esbuild: BuildOptions
 
   /**
    * Environment variables to pass to the Lambda Function.
    */
   environment?: Record<string, string>
-
-  /**
-   * Explicitly routed endpoints.
-   */
-  routes?: Record<string, string>
 }
 
 /**
@@ -177,12 +173,26 @@ export class Api extends BronyaConstruct {
 
   routes: Record<string, RouteInfo> = {}
 
+  public config: ApiProps
+
   constructor(
     readonly scope: Construct,
     readonly id: string,
-    readonly config: ApiProps,
+    config: Partial<ApiProps> = {},
   ) {
     super(scope, id)
+
+    this.config = {
+      root: process.cwd(),
+      directory: 'src',
+      entryPoint: '+endpoint.ts',
+      outDirectory: '.bronya',
+      exitPoint: 'handler.js',
+      esbuild: {},
+      constructs: {},
+      environment: {},
+      ...config,
+    }
 
     this.root = config.root ?? getClosestProjectDirectory()
 
@@ -195,7 +205,10 @@ export class Api extends BronyaConstruct {
   async init() {
     const apiRoutesDirectory = path.resolve(this.root, this.config.directory)
 
-    const projects = findAllProjects(apiRoutesDirectory)
+    const projects = findDirectoriesWithFile(
+      this.config.entryPoint ?? '+endpoint.ts',
+      apiRoutesDirectory,
+    )
 
     const apiRoutesRootDirectory = path.resolve(this.root, apiRoutesDirectory)
 
@@ -218,10 +231,6 @@ export class Api extends BronyaConstruct {
           ...apiOverride?.esbuild,
           ...this.config.esbuild,
         },
-        development: {
-          ...apiOverride?.development,
-          ...this.config.development,
-        },
         constructs: {
           ...apiOverride?.constructs,
           ...this.config.constructs,
@@ -232,7 +241,7 @@ export class Api extends BronyaConstruct {
         },
       }
 
-      const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? 'src/index.ts')
+      const entryPoint = path.resolve(directory, mergedProps.entryPoint ?? '+endpoint.ts')
 
       const exitPoint = mergedProps.exitPoint ?? path.basename(entryPoint)
 
@@ -241,6 +250,7 @@ export class Api extends BronyaConstruct {
       const outDirectory = path.resolve(directory, mergedProps.outDirectory ?? 'dist')
 
       const routeInfo = {
+        root: this.root,
         directory,
         endpoint,
         entryPoint,
@@ -248,7 +258,7 @@ export class Api extends BronyaConstruct {
         methods,
         outDirectory,
         esbuild: mergedProps.esbuild,
-        environment: mergedProps.environment,
+        environment: mergedProps.environment ?? {},
         constructs: mergedProps.constructs,
       } satisfies RouteInfo
 
@@ -256,20 +266,6 @@ export class Api extends BronyaConstruct {
     }
 
     await Promise.all(projects.map(async (directory) => processDirectory(directory)))
-
-    /**
-     * Explicitly routed endpoints are [endpoint, directory] pairs.
-     *
-     * Automatically parsed directory-based routing assumes the endpoint is the directory's path
-     * relative from {@link apiRoutesRootDirectory}.
-     */
-    if (this.config.routes) {
-      await Promise.all(
-        Object.entries(this.config.routes).map(async ([endpoint, directory]) => {
-          return processDirectory(directory, endpoint)
-        }),
-      )
-    }
   }
 
   /**

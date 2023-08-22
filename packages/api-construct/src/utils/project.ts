@@ -86,34 +86,43 @@ export function getWorkspaceRoot(
  * Recursively find all paths to projects starting from a given root directory.
  */
 export function findAllProjects(root = process.cwd()): string[] {
-  const allProjects = findSubProjects(root)
-  const dedupedProjects = [...new Set(allProjects)]
-  return dedupedProjects
+  return findDirectoriesWithFile('package.json', root)
+}
+
+export function findDirectoriesWithFile(file = 'package.json', root = process.cwd()): string[] {
+  const allDirectoriesWithFile = findSubdirectoriesWithFile(file, root)
+  const dedupedDirectories = [...new Set(allDirectoriesWithFile)]
+  return dedupedDirectories
 }
 
 /**
- * Recursively find all paths to projects starting from a given root directory.
+ * Recursively find all paths to directories with a certain file, starting from a given root directory.
  */
-export function findSubProjects(
+export function findSubdirectoriesWithFile(
+  file: string,
   root = process.cwd(),
   directory = '',
   paths: string[] = [],
 ): string[] {
-  if (!fs.existsSync(`${root}/${directory}`)) {
+  const currentDirectory = path.join(root, directory)
+
+  if (!fs.existsSync(currentDirectory)) {
     return paths
   }
 
-  if (fs.existsSync(`${root}/${directory}/package.json`)) {
-    paths.push(path.join(root, directory))
+  if (fs.existsSync(path.join(currentDirectory, file))) {
+    paths.push(currentDirectory)
   }
 
   const subRoutes = fs
-    .readdirSync(`${root}/${directory}`, { withFileTypes: true })
+    .readdirSync(currentDirectory, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name)
 
   paths.push(
-    ...subRoutes.flatMap((subRoute) => findSubProjects(root, `${directory}/${subRoute}`, paths)),
+    ...subRoutes.flatMap((subRoute) =>
+      findSubdirectoriesWithFile(file, root, path.join(directory, subRoute), paths),
+    ),
   )
 
   return paths

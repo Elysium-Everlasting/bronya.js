@@ -147,6 +147,28 @@ importers:
         specifier: ^8.10.119
         version: 8.10.119
 
+  examples/v2:
+    dependencies:
+      '@bronya.js/api-construct':
+        specifier: workspace:^
+        version: link:../../packages/api-construct
+      '@bronya.js/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      aws-cdk-lib:
+        specifier: ^2.92.0
+        version: 2.92.0(constructs@10.2.69)
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+      aws-cdk:
+        specifier: ^2.92.0
+        version: 2.92.0
+      tsx:
+        specifier: ^3.12.7
+        version: 3.12.7
+
   packages/api-construct:
     dependencies:
       '@bronya.js/cli':
