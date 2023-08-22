@@ -40,6 +40,24 @@ function noop() {
   /* noop */
 }
 
+/**
+ * Type guard that asserts the value of an object entry is not null.
+ */
+function entryValueNotNull<T>(v: [string, T]): v is [string, NonNullable<T>] {
+  return v != null
+}
+
+/**
+ * Given some dumb looking object, return a nicer looking one.
+ */
+export function normalizeRecord(headers: unknown): Record<string, string> {
+  const headerEntries = Object.entries(headers ?? {})
+    .filter(entryValueNotNull)
+    .map(([k, v]) => [k, Array.isArray(v) ? (v.length === 1 ? v[0] : v) : v])
+
+  return Object.fromEntries(headerEntries)
+}
+
 function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
   return async (req, res, next) => {
     const callback: APIGatewayProxyCallback = (error, response) => {
@@ -56,11 +74,14 @@ function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
       res.status(response.statusCode ?? 200).json(response.body)
     }
 
+    let headers: Record<string, string | string>
+    let query: Record<string, string | string>
+
     const event: APIGatewayProxyEvent = {
       body: req.body,
       get headers() {
-        // req.headers
-        return {}
+        headers ??= normalizeRecord(req.headers)
+        return headers
       },
       get multiValueHeaders() {
         return {}
@@ -72,8 +93,8 @@ function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
       path: req.path,
       pathParameters: req.params,
       get queryStringParameters() {
-        // req.query,
-        return {}
+        query ??= normalizeRecord(req.query)
+        return query
       },
       get multiValueQueryStringParameters() {
         return {}
