@@ -29,16 +29,16 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/api.d.ts",
-      "import": "./dist/api.js",
-      "require": "./dist/api.cjs",
-      "default": "./dist/api.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     }
   },
   "typesVersion": {
     "*": {
       ".": [
-        "dist/api.d.ts"
+        "dist/index.d.ts"
       ]
     }
   },
