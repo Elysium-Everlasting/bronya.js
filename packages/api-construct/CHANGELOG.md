@@ -1,5 +1,19 @@
 # @bronya.js/api-construct
 
+## 0.5.0
+
+### Minor Changes
+
+- 097489c: fix: forgot to specify files field properly in package.json
+- 097489c: fix: forgot prepublishing script
+
+### Patch Changes
+
+- Updated dependencies [097489c]
+- Updated dependencies [097489c]
+  - @bronya.js/core@0.5.0
+  - @bronya.js/cli@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

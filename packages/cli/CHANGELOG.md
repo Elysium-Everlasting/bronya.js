@@ -1,5 +1,12 @@
 # @bronya.js/cli
 
+## 0.5.0
+
+### Minor Changes
+
+- 097489c: fix: forgot to specify files field properly in package.json
+- 097489c: fix: forgot prepublishing script
+
 ## 0.4.0
 
 ### Minor Changes
