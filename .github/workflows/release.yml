@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build
+        run: pnpm build
+
       - name: Generate commit message
         id: devmoji
         run: |
@@ -41,7 +44,7 @@ jobs:
       - name: Create release pull request or publish to npm
         uses: changesets/action@v1
         with:
-          publish: pnpm release
+          publish: pnpm publish -r
           commit: ${{ steps.devmoji.outputs.MESSAGE }}
           title: ${{ steps.devmoji.outputs.MESSAGE }}
         env:
