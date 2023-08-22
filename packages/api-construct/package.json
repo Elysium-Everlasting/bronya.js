@@ -42,7 +42,10 @@
       ]
     }
   },
-  "files": [],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/index.ts",

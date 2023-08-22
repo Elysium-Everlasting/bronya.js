@@ -63,7 +63,10 @@
       ]
     }
   },
-  "files": [],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/cli.ts",
