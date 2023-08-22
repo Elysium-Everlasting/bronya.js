@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.6.2
+
+### Patch Changes
+
+- 47e1ec4: feat: query string parameters lazily computed and cached
+
 ## 0.6.1
 
 ### Patch Changes
