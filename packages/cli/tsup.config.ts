@@ -5,8 +5,7 @@ export default defineConfig({
     index: 'src/index.ts',
   },
   bundle: true,
-  minify: false,
-  format: ['cjs', 'esm'],
   dts: true,
+  format: ['cjs', 'esm'],
   outDir: 'dist',
 })

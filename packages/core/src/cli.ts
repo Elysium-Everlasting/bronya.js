@@ -11,19 +11,19 @@ async function main() {
 
   const pluginsWithOrigin = getAppPlugins(app)
 
-  pluginsWithOrigin.forEach(({ plugins, origin }) => {
-    plugins.forEach((plugin) => {
+  for (const { plugins, origin } of pluginsWithOrigin) {
+    for (const plugin of plugins) {
       switch (plugin.type) {
         case 'cli': {
-          plugin.extend?.(origin, cli, app)
+          await plugin.extend?.(origin, cli, app)
           break
         }
 
         default:
           break
       }
-    })
-  })
+    }
+  }
 
   cli.parse()
 }

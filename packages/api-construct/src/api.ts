@@ -431,23 +431,25 @@ export async function getApiOverride(
 ): Promise<ApiPropsOverride | undefined> {
   const app = initializedApp ?? (await loadAppFromConfig())
 
-  const stacks = app.node.children.filter(aws_core.Stack.isStack)
+  const topLevelApiOverride = app.node.children.find(ApiPropsOverride.isApiRouteConfigOverride)
 
-  if (!stacks) {
-    throw new Error(`No stacks found.`)
+  if (topLevelApiOverride) {
+    return topLevelApiOverride
   }
+
+  const stacks = app.node.children.filter(aws_core.Stack.isStack)
 
   const stackWithApiOverride = stacks.find((stack) =>
     stack.node.children.some(ApiPropsOverride.isApiRouteConfigOverride),
   )
 
-  const apiOverride = stackWithApiOverride?.node.children.find(
+  const nestedApiOverride = stackWithApiOverride?.node.children.find(
     ApiPropsOverride.isApiRouteConfigOverride,
   )
 
-  if (!apiOverride) {
+  if (!nestedApiOverride) {
     return undefined
   }
 
-  return apiOverride
+  return nestedApiOverride
 }
