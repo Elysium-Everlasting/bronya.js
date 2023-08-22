@@ -49,7 +49,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/index.ts",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublish": "tsup"
   },
   "dependencies": {
     "@bronya.js/cli": "workspace:^",

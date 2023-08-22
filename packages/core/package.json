@@ -70,7 +70,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/cli.ts",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublish": "tsup"
   },
   "dependencies": {
     "@bronya.js/cli": "workspace:^",
