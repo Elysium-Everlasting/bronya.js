@@ -1,5 +1,13 @@
 # @bronya.js/core
 
+## 0.6.1
+
+### Patch Changes
+
+- 07351c8: fix: wrong export paths
+- Updated dependencies [07351c8]
+  - @bronya.js/cli@0.6.1
+
 ## 0.6.0
 
 ### Minor Changes
