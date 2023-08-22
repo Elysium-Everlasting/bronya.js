@@ -71,6 +71,11 @@ export interface ApiProps {
    * Environment variables to pass to the Lambda Function.
    */
   environment?: Record<string, string>
+
+  /**
+   * Explicitly routed endpoints.
+   */
+  routes?: Record<string, string>
 }
 
 /**
@@ -210,7 +215,7 @@ export class Api extends BronyaConstruct {
             path.relative(path.resolve(this.root, apiRoutesDirectory), directory),
           )
 
-          this.routes[directory] = {
+          const routeInfo = {
             directory,
             endpoint,
             entryPoint,
@@ -220,6 +225,19 @@ export class Api extends BronyaConstruct {
             esbuild: this.config.esbuild,
             environment: this.config.environment,
             constructs: this.config.constructs,
+          } satisfies RouteInfo
+
+          this.routes[directory] = routeInfo
+
+          if (this.config.routes != null) {
+            Object.entries(this.config.routes)
+              .filter(([, value]) => value === endpoint)
+              .forEach(([key, value]) => {
+                this.routes[key] = {
+                  ...routeInfo,
+                  endpoint: value,
+                }
+              })
           }
 
           return
@@ -266,16 +284,29 @@ export class Api extends BronyaConstruct {
           path.relative(path.resolve(this.root, apiRoutesDirectory), directory),
         )
 
-        this.routes[directory] = {
+        const routeInfo = {
           directory,
           endpoint,
           entryPoint,
           exitPoint,
           methods,
           outDirectory,
-          esbuild: mergedProps.esbuild ?? undefined,
-          environment: mergedProps.environment ?? undefined,
+          esbuild: mergedProps.esbuild,
+          environment: mergedProps.environment,
           constructs: mergedProps.constructs,
+        } satisfies RouteInfo
+
+        this.routes[directory] = routeInfo
+
+        if (this.config.routes != null) {
+          Object.entries(this.config.routes)
+            .filter(([, value]) => value === endpoint)
+            .forEach(([key, value]) => {
+              this.routes[key] = {
+                ...routeInfo,
+                endpoint: value,
+              }
+            })
         }
       }),
     )
