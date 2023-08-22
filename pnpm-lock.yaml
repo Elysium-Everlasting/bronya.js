@@ -129,6 +129,12 @@ importers:
         specifier: ^8.10.119
         version: 8.10.119
 
+  examples/basic/src/api/a/d:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+
   examples/basic/src/api/b:
     devDependencies:
       '@types/aws-lambda':
