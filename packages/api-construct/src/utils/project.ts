@@ -105,7 +105,6 @@ export function findSubProjects(
 
   if (fs.existsSync(`${root}/${directory}/package.json`)) {
     paths.push(path.join(root, directory))
-    return paths
   }
 
   const subRoutes = fs
@@ -113,5 +112,9 @@ export function findSubProjects(
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name)
 
-  return subRoutes.flatMap((subRoute) => findSubProjects(root, `${directory}/${subRoute}`, paths))
+  paths.push(
+    ...subRoutes.flatMap((subRoute) => findSubProjects(root, `${directory}/${subRoute}`, paths)),
+  )
+
+  return paths
 }

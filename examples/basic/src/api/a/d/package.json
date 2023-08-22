@@ -1,0 +1,9 @@
+{
+  "name": "@bronya.js/examples-basic-api-route-a-d",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119"
+  }
+}
