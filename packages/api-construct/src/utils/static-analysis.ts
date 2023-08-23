@@ -8,8 +8,6 @@ import type {
   Program,
 } from 'estree'
 
-// Because of some tomfoolery, the `acorn` namespace is now available globally :^)
-
 type NamedExportNode = ExtendNode<ExportNamedDeclaration>
 
 type VariableDeclaratorNode = ExtendNode<VariableDeclaration>
@@ -24,7 +22,7 @@ const defaultParseOptions: acorn.Options = {
   locations: true,
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const tsParser = Parser.extend(tsPlugin() as any)
 
 /**

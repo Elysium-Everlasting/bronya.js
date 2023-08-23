@@ -9,7 +9,7 @@ import type {
   Context,
 } from 'aws-lambda'
 import bodyParser from 'body-parser'
-import chokidar from 'chokidar'
+import { watch } from 'chokidar'
 import { consola } from 'consola'
 import cors from 'cors'
 import express, { Router, type Handler } from 'express'
@@ -51,12 +51,21 @@ function entryValueNotNull<T>(v: [string, T]): v is [string, NonNullable<T>] {
 /**
  * Given some dumb looking object, return a nicer looking one.
  */
-export function normalizeRecord(headers: unknown): Record<string, string> {
+function normalizeRecord(headers: unknown): Record<string, string> {
   const headerEntries = Object.entries(headers ?? {})
     .filter(entryValueNotNull)
     .map(([k, v]) => [k, Array.isArray(v) ? (v.length === 1 ? v[0] : v) : v])
 
   return Object.fromEntries(headerEntries)
+}
+
+/**
+ * Convert path parameters from an API Gateway path to an Express.js path.
+ *
+ * @example '/v1/rest/{id}/{name}' -> '/v1/rest/:id/:name'
+ */
+function apiGatewayPathToExpressPath(apiGatewayPath: string): string {
+  return apiGatewayPath.replace(/{([^}]+)}/g, ':$1')
 }
 
 function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
@@ -76,6 +85,7 @@ function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
     }
 
     let headers: Record<string, string | string>
+
     let query: Record<string, string | string>
 
     const event: APIGatewayProxyEvent = {
@@ -178,9 +188,11 @@ export interface ServerOptions {
   /**
    * Protocol to use for the development server.
    *
+   * @example 'http' | 'https'
+   *
    * @default 'http'
    */
-  protocol?: 'http' | 'https'
+  protocol?: string
 
   /**
    * Host to use for the development server.
@@ -203,7 +215,7 @@ export interface ServerOptions {
  * @param overrides Override the development server options from the API construct's config.
  */
 export async function startExpressApiDevelopmentServer(api: Api, overrides: ServerOptions = {}) {
-  const require = createRequire(__filename)
+  let require: NodeRequire
 
   /**
    * Merge.
@@ -297,7 +309,7 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
      */
     const internalHandlers =
       apiRouteInfo.esbuild.format === 'cjs'
-        ? require(file)
+        ? (require ??= createRequire(__filename))(file)
         : await import(`${file}?update=${Date.now()}`)
 
     if (internalHandlers == null) {
@@ -349,7 +361,7 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
   // Watch file changes.
   //---------------------------------------------------------------------------------
 
-  const watcher = chokidar.watch(apiRoutePaths, {
+  const watcher = watch(apiRoutePaths, {
     ignored: [
       /(^|[/\\])\../, // dotfiles
       /node_modules/, // node_modules
@@ -375,13 +387,4 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
 
     refreshRouter()
   })
-}
-
-/**
- * Convert path parameters from an API Gateway path to an Express.js path.
- *
- * @example '/v1/rest/{id}/{name}' -> '/v1/rest/:id/:name'
- */
-export function apiGatewayPathToExpressPath(apiGatewayPath: string): string {
-  return apiGatewayPath.replace(/{([^}]+)}/g, ':$1')
 }

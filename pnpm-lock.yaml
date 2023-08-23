@@ -111,7 +111,25 @@ importers:
         specifier: ^8.10.119
         version: 8.10.119
 
+  examples/basic/cdk.out/asset.5a10319f89b1d57432fbb815dbe3db2d92a1cc98c8266a7f713ecf942ed71375:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+
+  examples/basic/cdk.out/asset.5a10319f89b1d57432fbb815dbe3db2d92a1cc98c8266a7f713ecf942ed71375/d:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+
   examples/basic/cdk.out/asset.6608c813d455b646ca5955cd7c25b6bda68b541c58bee2cb8029c25dc1750cdf:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.119
+        version: 8.10.119
+
+  examples/basic/cdk.out/asset.c24de59c359de37a560bb8db7f5d1d46c06308d2c78dc1b9bac3dedd425abab1:
     devDependencies:
       '@types/aws-lambda':
         specifier: ^8.10.119
@@ -155,6 +173,9 @@ importers:
       '@bronya.js/core':
         specifier: workspace:^
         version: link:../../packages/core
+      '@prisma/client':
+        specifier: ^5.2.0
+        version: 5.2.0(prisma@5.2.0)
       aws-cdk-lib:
         specifier: ^2.92.0
         version: 2.92.0(constructs@10.2.69)
@@ -165,6 +186,9 @@ importers:
       aws-cdk:
         specifier: ^2.92.0
         version: 2.92.0
+      prisma:
+        specifier: ^5.2.0
+        version: 5.2.0
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -2178,6 +2202,37 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
     dev: true
+
+  /@prisma/client@5.2.0(prisma@5.2.0):
+    resolution:
+      {
+        integrity: sha512-AiTjJwR4J5Rh6Z/9ZKrBBLel3/5DzUNntMohOy7yObVnVoTNVFi2kvpLZlFuKO50d7yDspOtW6XBpiAd0BVXbQ==,
+      }
+    engines: { node: '>=16.13' }
+    requiresBuild: true
+    peerDependencies:
+      prisma: '*'
+    peerDependenciesMeta:
+      prisma:
+        optional: true
+    dependencies:
+      '@prisma/engines-version': 5.2.0-25.2804dc98259d2ea960602aca6b8e7fdc03c1758f
+      prisma: 5.2.0
+    dev: false
+
+  /@prisma/engines-version@5.2.0-25.2804dc98259d2ea960602aca6b8e7fdc03c1758f:
+    resolution:
+      {
+        integrity: sha512-jsnKT5JIDIE01lAeCj2ghY9IwxkedhKNvxQeoyLs6dr4ZXynetD0vTy7u6wMJt8vVPv8I5DPy/I4CFaoXAgbtg==,
+      }
+    dev: false
+
+  /@prisma/engines@5.2.0:
+    resolution:
+      {
+        integrity: sha512-dT7FOLUCdZmq+AunLqB1Iz+ZH/IIS1Fz2THmKZQ6aFONrQD/BQ5ecJ7g2wGS2OgyUFf4OaLam6/bxmgdOBDqig==,
+      }
+    requiresBuild: true
 
   /@sinclair/typebox@0.27.8:
     resolution:
@@ -7344,6 +7399,17 @@ packages:
       ansi-styles: 5.2.0
       react-is: 18.2.0
     dev: true
+
+  /prisma@5.2.0:
+    resolution:
+      {
+        integrity: sha512-FfFlpjVCkZwrqxDnP4smlNYSH1so+CbfjgdpioFzGGqlQAEm6VHAYSzV7jJgC3ebtY9dNOhDMS2+4/1DDSM7bQ==,
+      }
+    engines: { node: '>=16.13' }
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      '@prisma/engines': 5.2.0
 
   /proxy-addr@2.0.7:
     resolution:

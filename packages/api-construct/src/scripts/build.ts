@@ -1,6 +1,6 @@
 import { build } from 'esbuild'
 
-import type { RouteInfo } from '../Api.js'
+import type { RouteInfo } from '../api.js'
 
 /**
  * Build an API route.

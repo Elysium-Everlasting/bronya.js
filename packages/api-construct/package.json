@@ -33,12 +33,39 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
+    },
+    "./plugins/cli": {
+      "types": "./dist/plugins/cli.d.ts",
+      "import": "./dist/plugins/cli.js",
+      "require": "./dist/plugins/cli.cjs",
+      "default": "./dist/plugins/cli.js"
+    },
+    "./integrations/express": {
+      "types": "./dist/integrations/express.d.ts",
+      "import": "./dist/integrations/express.js",
+      "require": "./dist/integrations/express.cjs",
+      "default": "./dist/integrations/express.js"
+    },
+    "./integrations/lambda": {
+      "types": "./dist/integrations/lambda.d.ts",
+      "import": "./dist/integrations/lambda.js",
+      "require": "./dist/integrations/lambda.cjs",
+      "default": "./dist/integrations/lambda.js"
     }
   },
   "typesVersion": {
     "*": {
       ".": [
         "dist/index.d.ts"
+      ],
+      "./plugins/cli": [
+        "dist/plugins/cli.d.ts"
+      ],
+      "./integrations/express": [
+        "dist/integrations/express.d.ts"
+      ],
+      "./integrations/lambda": [
+        "dist/integrations/lambda.d.ts"
       ]
     }
   },
