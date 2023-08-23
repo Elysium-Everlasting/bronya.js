@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -14,7 +13,6 @@ import { isHttpMethod, warmerRequestBody } from './integrations/lambda/index.js'
 import { buildApiRoute } from './scripts/build.js'
 import type { DeepPartial } from './utils/deep-partial.js'
 import { findDirectoriesWithFile, getClosestProjectDirectory } from './utils/project.js'
-import { getNamedExports } from './utils/static-analysis.js'
 
 /**
  * The root API construct can configure the follow settings as defaults for all routes.
@@ -249,10 +247,9 @@ export class Api extends BronyaConstruct {
 
     const apiRoutesDirectory = path.resolve(this.root, this.config.directory)
 
-    const projects = findDirectoriesWithFile(
-      this.config.entryPoint ?? '+endpoint.ts',
-      apiRoutesDirectory,
-    )
+    const entryFileName = this.config.entryPoint ?? '+endpoint.ts'
+
+    const projects = findDirectoriesWithFile(entryFileName, apiRoutesDirectory)
 
     const apiRoutesRootDirectory = path.resolve(this.root, apiRoutesDirectory)
 
@@ -264,33 +261,32 @@ export class Api extends BronyaConstruct {
 
       const exitPoint = this.config.exitPoint ?? path.basename(entryPoint)
 
-      const methods = getNamedExports(fs.readFileSync(entryPoint, 'utf-8'))
-
       const outDirectory = path.resolve(directory, this.config.outDirectory)
 
-      const routeInfo = {
-        ...this.config,
-        directory,
-        endpoint,
-        entryPoint,
-        exitPoint,
-        methods,
-        outDirectory,
-      } satisfies RouteInfo
+      const esbuild = this.config.esbuild
 
-      await buildApiRoute(routeInfo)
+      await buildApiRoute({ esbuild, entryPoint, exitPoint, outDirectory })
 
       const file = path.resolve(outDirectory, exitPoint)
 
       const exports =
-        routeInfo.esbuild.format === 'cjs'
+        esbuild.format === 'cjs'
           ? (require ??= createRequire(__filename))(file)
           : await import(`${file}?update=${Date.now()}`)
 
       const overrides: DeepPartial<RouteInfo> =
         exports?.default?.overrides ?? exports?.overrides ?? {}
 
-      this.routes[directory] = { ...routeInfo, ...overrides }
+      this.routes[directory] = {
+        ...this.config,
+        directory,
+        endpoint,
+        entryPoint,
+        exitPoint,
+        methods: Object.keys(exports).filter(isHttpMethod),
+        outDirectory,
+        ...overrides,
+      }
     }
 
     await Promise.all(projects.map(async (directory) => processDirectory(directory)))
@@ -331,7 +327,7 @@ export class Api extends BronyaConstruct {
          */
         const outDirectory = path.relative(directory, route.outDirectory)
 
-        route.methods.filter(isHttpMethod).forEach((httpMethod) => {
+        route.methods.forEach((httpMethod) => {
           const getFunctionProps =
             props.constructs?.functionProps ?? route.constructs?.functionProps
 

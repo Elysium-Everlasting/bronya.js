@@ -1,12 +1,17 @@
 import type { Plugin } from '@bronya.js/core'
 
-import { addDevCommand, type DevOptions } from '../cli/commands/dev.js'
+import { addDevCommand, type DevCommandOptions } from '../cli/commands/dev.js'
+
+import { addBuildCommand, type BuildCommandOptions } from './commands/build.js'
+import { addCleanCommand, type CleanCommandOptions } from './commands/clean.js'
 
 /**
  * TODO.
  */
 interface CreateApiPluginOptions {
-  dev?: DevOptions
+  dev?: DevCommandOptions
+  clean?: CleanCommandOptions
+  build?: BuildCommandOptions
 }
 
 /**
@@ -14,7 +19,7 @@ interface CreateApiPluginOptions {
  */
 export function createCliPlugin(options: CreateApiPluginOptions = {}): Plugin {
   const apiPlugin: Plugin = {
-    name: 'api-cli',
+    name: 'api-cli-plugin',
 
     type: 'cli',
 
@@ -22,12 +27,10 @@ export function createCliPlugin(options: CreateApiPluginOptions = {}): Plugin {
 
     async extend(api, cli) {
       addDevCommand(options.dev)(api, cli)
+      addCleanCommand(options.clean)(api, cli)
+      addBuildCommand(options.build)(api, cli)
 
       // TODO: addCreateRouteCommand
-
-      // TODO: addBuildCommand
-
-      // TODO: addCleanCommand
 
       // TODO: addDeployCommand
 

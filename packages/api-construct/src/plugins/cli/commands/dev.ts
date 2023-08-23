@@ -9,9 +9,9 @@ import {
 /**
  * TODO
  */
-export interface DevOptions extends ServerOptions {}
+export interface DevCommandOptions extends ServerOptions {}
 
-export const addDevCommand = (rootOptions: DevOptions = {}) =>
+export const addDevCommand = (rootOptions: DevCommandOptions = {}) =>
   ((api, cli) => {
     cli
       .command('dev-api [directory]')

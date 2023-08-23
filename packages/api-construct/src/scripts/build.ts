@@ -2,22 +2,24 @@ import { build } from 'esbuild'
 
 import type { RouteInfo } from '../api.js'
 
+type BuildOptions = Pick<RouteInfo, 'esbuild' | 'entryPoint' | 'exitPoint' | 'outDirectory'>
+
 /**
  * Build an API route.
  */
-export async function buildApiRoute(apiRouteConfig: RouteInfo) {
+export async function buildApiRoute(apiRouteBuildOptions: BuildOptions) {
   const esbuildOptions = {
-    ...apiRouteConfig.esbuild,
-    outdir: apiRouteConfig.esbuild?.outdir ?? apiRouteConfig.outDirectory,
+    ...apiRouteBuildOptions.esbuild,
+    outdir: apiRouteBuildOptions.esbuild?.outdir ?? apiRouteBuildOptions.outDirectory,
   }
 
   esbuildOptions.entryPoints ??= {
-    [apiRouteConfig.exitPoint.replace(/.js$/, '')]: apiRouteConfig.entryPoint,
+    [apiRouteBuildOptions.exitPoint.replace(/.js$/, '')]: apiRouteBuildOptions.entryPoint,
   }
 
   const buildOutput = await build(esbuildOptions)
 
-  if (apiRouteConfig.esbuild?.logLevel === 'info') {
+  if (apiRouteBuildOptions.esbuild?.logLevel === 'info') {
     console.log(buildOutput)
   }
 }

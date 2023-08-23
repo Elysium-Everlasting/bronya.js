@@ -38,9 +38,9 @@ type RequiredKey<Key extends string> = `<${Key}>`
 type VariadicKey<Key extends string> = `[...${Key}]`
 
 type CommandParser<T extends string> = T extends `${infer L}${VariadicKey<infer Key>}${infer R}`
-  ? Record<Key, string> & CommandParser<L> & CommandParser<R>
+  ? Record<Key, string[]> & CommandParser<L> & CommandParser<R>
   : T extends `${infer L}${OptionalKey<infer Key>}${infer R}`
-  ? Record<Key, string> & CommandParser<L> & CommandParser<R>
+  ? Record<Key, string | undefined> & CommandParser<L> & CommandParser<R>
   : T extends `${infer L}${RequiredKey<infer Key>}${infer R}`
   ? Record<Key, string> & CommandParser<L> & CommandParser<R>
   : unknown
