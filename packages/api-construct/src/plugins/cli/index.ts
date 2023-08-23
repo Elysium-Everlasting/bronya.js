@@ -4,9 +4,6 @@ import { addBuildCommand, type BuildCommandOptions } from './commands/build.js'
 import { addCleanCommand, type CleanCommandOptions } from './commands/clean.js'
 import { addDevCommand, type DevCommandOptions } from './commands/dev.js'
 
-/**
- * TODO.
- */
 interface CreateApiPluginOptions {
   dev?: DevCommandOptions
   clean?: CleanCommandOptions
