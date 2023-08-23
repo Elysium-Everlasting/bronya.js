@@ -2,8 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import type { Plugin } from 'esbuild'
-import type { Api } from 'packages/core/dist/api.js'
 
+import type { Api } from '../../api.js'
 import { getClosestProjectDirectory } from '../../utils/project.js'
 
 const projectRoot = getClosestProjectDirectory()
