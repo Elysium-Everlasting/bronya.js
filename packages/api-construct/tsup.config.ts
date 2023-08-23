@@ -4,10 +4,11 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     'plugins/cli': 'src/plugins/cli/index.ts',
+    'plugins/esbuild-prisma': 'src/plugins/esbuild-prisma/index.ts',
     'integrations/express': 'src/integrations/express/index.ts',
     'integrations/lambda': 'src/integrations/lambda/index.ts',
   },
-  external: [/esbuild/],
+  external: [/^esbuild$/],
   format: ['cjs', 'esm'],
   dts: true,
   outDir: 'dist',
