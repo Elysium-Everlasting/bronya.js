@@ -10,17 +10,24 @@ export interface BuildCommandOptions {
   route?: string
 }
 
-export const addBuildCommand = (rootOptions: BuildCommandOptions = {}) =>
-  ((api, cli) => {
-    cli.command('build [route]').action(async (args, _options) => {
-      const route = args.route ?? rootOptions.route ?? process.cwd()
+export function buildCommandCliPlugin(api: Api, rootOptions: BuildCommandOptions = {}): CliPlugin {
+  return {
+    name: 'api-cli-build-command-plugin',
 
-      const routeInfo = api.routes[route]
+    type: 'cli',
 
-      if (!routeInfo) {
-        throw new Error(`Route "${route}" not found.`)
-      }
+    extend(cli) {
+      cli.command('build-api [route]').action(async (args, _options) => {
+        const route = args.route ?? rootOptions.route ?? process.cwd()
 
-      await buildApiRoute(routeInfo)
-    })
-  }) satisfies CliPlugin<Api>['extend']
+        const routeInfo = api.routes[route]
+
+        if (!routeInfo) {
+          throw new Error(`Route "${route}" not found.`)
+        }
+
+        await buildApiRoute(routeInfo)
+      })
+    },
+  }
+}

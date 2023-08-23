@@ -18,6 +18,8 @@ export function findSubdirectoriesWithFile(
 ): string[] {
   const currentDirectory = path.join(root, directory)
 
+  console.log({ currentDirectory, file, root, directory, paths })
+
   if (!fs.existsSync(currentDirectory)) {
     return paths
   }

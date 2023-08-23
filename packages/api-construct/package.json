@@ -34,29 +34,17 @@
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
-    "./plugins/cli": {
-      "types": "./dist/plugins/cli.d.ts",
-      "import": "./dist/plugins/cli.js",
-      "require": "./dist/plugins/cli.cjs",
-      "default": "./dist/plugins/cli.js"
+    "./plugins/*": {
+      "types": "./dist/plugins/*.d.ts",
+      "import": "./dist/plugins/*.js",
+      "require": "./dist/plugins/*.cjs",
+      "default": "./dist/plugins/*.js"
     },
-    "./plugins/esbuild-prisma": {
-      "types": "./dist/plugins/esbuild-prisma.d.ts",
-      "import": "./dist/plugins/esbuild-prisma.js",
-      "require": "./dist/plugins/esbuild-prisma.cjs",
-      "default": "./dist/plugins/esbuild-prisma.js"
-    },
-    "./integrations/express": {
-      "types": "./dist/integrations/express.d.ts",
-      "import": "./dist/integrations/express.js",
-      "require": "./dist/integrations/express.cjs",
-      "default": "./dist/integrations/express.js"
-    },
-    "./integrations/lambda": {
-      "types": "./dist/integrations/lambda.d.ts",
-      "import": "./dist/integrations/lambda.js",
-      "require": "./dist/integrations/lambda.cjs",
-      "default": "./dist/integrations/lambda.js"
+    "./integrations/*": {
+      "types": "./dist/integrations/*.d.ts",
+      "import": "./dist/integrations/*.js",
+      "require": "./dist/integrations/*.cjs",
+      "default": "./dist/integrations/*.js"
     }
   },
   "typesVersion": {
@@ -64,17 +52,11 @@
       ".": [
         "dist/index.d.ts"
       ],
-      "./plugins/cli": [
-        "dist/plugins/cli.d.ts"
+      "./plugins/*": [
+        "dist/plugins/*.d.ts"
       ],
-      "./plugins/esbuild-prisma": [
-        "dist/plugins/esbuild-prisma.d.ts"
-      ],
-      "./integrations/express": [
-        "dist/integrations/express.d.ts"
-      ],
-      "./integrations/lambda": [
-        "dist/integrations/lambda.d.ts"
+      "./integrations/*": [
+        "dist/integrations/*.d.ts"
       ]
     }
   },

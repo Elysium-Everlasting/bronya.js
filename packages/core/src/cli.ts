@@ -9,19 +9,17 @@ async function main() {
 
   const app = await loadAppFromConfig()
 
-  const pluginsWithOrigin = getAppPlugins(app)
+  const plugins = getAppPlugins(app)
 
-  for (const { plugins, origin } of pluginsWithOrigin) {
-    for (const plugin of plugins) {
-      switch (plugin.type) {
-        case 'cli': {
-          await plugin.extend?.(origin, cli, app)
-          break
-        }
-
-        default:
-          break
+  for (const plugin of plugins) {
+    switch (plugin.type) {
+      case 'cli': {
+        await plugin.extend?.(cli)
+        break
       }
+
+      default:
+        break
     }
   }
 

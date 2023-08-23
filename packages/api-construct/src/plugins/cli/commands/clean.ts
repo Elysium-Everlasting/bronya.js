@@ -10,12 +10,19 @@ import { findSubdirectoriesWithFile } from '../../../utils/directories.js'
  */
 export interface CleanCommandOptions {}
 
-export const addCleanCommand = (_rootOptions: CleanCommandOptions = {}) =>
-  ((api, cli) => {
-    cli.command('clean [directory]').action(async (args, _options) => {
-      cleanNestedDirectories(args.directory ?? api.config.outDirectory)
-    })
-  }) satisfies CliPlugin<Api>['extend']
+export function cleanCommandCliPlugin(api: Api, _rootOptions: CleanCommandOptions = {}): CliPlugin {
+  return {
+    name: 'api-cli-clean-command-plugin',
+
+    type: 'cli',
+
+    extend(cli) {
+      cli.command('clean-api [directory]').action(async (args, _options) => {
+        cleanNestedDirectories(args.directory ?? api.config.outDirectory)
+      })
+    },
+  }
+}
 
 /**
  * Given a file path, clean all nested directories with the file path.

@@ -26,11 +26,6 @@ export function isBronyaConstruct(construct: unknown): construct is BronyaConstr
   return Construct.isConstruct(construct) && (construct as BronyaConstruct).bronya === BronyaSymbol
 }
 
-interface PluginWithOrigin<T extends Construct = Construct> {
-  plugins: Plugin<T>[]
-  origin: T
-}
-
 /**
  * Find {@link BronyaConstruct} in a construct tree.
  *
@@ -61,17 +56,9 @@ export function findNestedBronyaConstructs(constructs: Construct[]): BronyaConst
   return bronyaConstructs
 }
 
-export function getAppPlugins<T extends BronyaConstruct = BronyaConstruct>(
-  app: App,
-): PluginWithOrigin<T>[] {
+export function getAppPlugins(app: App): Plugin[] {
   const bronyaConstructs = findNestedBronyaConstructs(app.node.children)
-
-  return bronyaConstructs.flatMap((construct) => {
-    return {
-      origin: construct as T,
-      plugins: construct.plugins,
-    }
-  })
+  return bronyaConstructs.flatMap((construct) => construct.plugins)
 }
 
 export { Construct }

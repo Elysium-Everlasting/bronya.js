@@ -17,6 +17,9 @@ export const configFiles = extensions.flatMap((extension) =>
   configFileNames.map((name) => `${name}${extension}`),
 )
 
+/**
+ * TODO: allow alternate config file names.
+ */
 export function findConfigFile(directory = process.cwd()) {
   const configFile = fs.readdirSync(directory).find((file) => configFiles.includes(file))
 
@@ -30,6 +33,9 @@ export function findConfigFile(directory = process.cwd()) {
   }
 }
 
+/**
+ * TODO: allow alternate config file names.
+ */
 export async function loadAppFromConfig(
   directory = getClosestProjectDirectory(process.cwd()),
 ): Promise<App> {

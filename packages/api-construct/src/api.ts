@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
-import { BronyaConstruct, Construct, type Plugin } from '@bronya.js/core'
+import { BronyaConstruct, Construct } from '@bronya.js/core'
 import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as aws_events from 'aws-cdk-lib/aws-events'
 import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'
@@ -10,6 +10,7 @@ import * as aws_core from 'aws-cdk-lib/core'
 import type { BuildOptions } from 'esbuild'
 
 import { isHttpMethod, warmerRequestBody } from './integrations/lambda/index.js'
+import type { ApiPlugin } from './plugins/index.js'
 import { buildApiRoute } from './scripts/build.js'
 import type { DeepPartial } from './utils/deep-partial.js'
 import { findDirectoriesWithFile } from './utils/directories.js'
@@ -86,7 +87,7 @@ export interface ApiProps {
   /**
    * Plugins to pass to the core {@link BronyaConstruct}.
    */
-  plugins?: Plugin[]
+  plugins?: ApiPlugin
 }
 
 /**
@@ -233,7 +234,9 @@ export class Api extends BronyaConstruct {
     }
 
     if (config.plugins) {
-      this.plugins.push(...config.plugins)
+      const plugins = config.plugins(this)
+      const pluginArray = Array.isArray(plugins) ? plugins : [plugins]
+      this.plugins.push(...pluginArray)
     }
   }
 
