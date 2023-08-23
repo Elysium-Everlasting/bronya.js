@@ -1,9 +1,8 @@
 import type { Plugin } from '@bronya.js/core'
 
-import { addDevCommand, type DevCommandOptions } from '../cli/commands/dev.js'
-
 import { addBuildCommand, type BuildCommandOptions } from './commands/build.js'
 import { addCleanCommand, type CleanCommandOptions } from './commands/clean.js'
+import { addDevCommand, type DevCommandOptions } from './commands/dev.js'
 
 /**
  * TODO.
