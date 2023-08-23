@@ -12,7 +12,8 @@ import type { BuildOptions } from 'esbuild'
 import { isHttpMethod, warmerRequestBody } from './integrations/lambda/index.js'
 import { buildApiRoute } from './scripts/build.js'
 import type { DeepPartial } from './utils/deep-partial.js'
-import { findDirectoriesWithFile, getClosestProjectDirectory } from './utils/project.js'
+import { findDirectoriesWithFile } from './utils/directories.js'
+import { getClosestProjectDirectory } from './utils/project.js'
 
 /**
  * The root API construct can configure the follow settings as defaults for all routes.
