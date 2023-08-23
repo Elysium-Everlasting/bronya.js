@@ -21,8 +21,6 @@ const projectRoot = process.cwd()
 // The relative path to the generated Prisma Client.
 const prismaClientDirectory = path.resolve(projectRoot, 'node_modules', 'prisma')
 
-const prismaSchema = path.resolve(projectRoot, 'prisma', 'schema.prisma')
-
 class MyStack extends Stack {
   api = new Api(this, 'super-awesome-api-v2', {
     plugins: createApiCliPlugins(),
@@ -35,12 +33,8 @@ class MyStack extends Stack {
         {
           name: 'copy',
           setup(build) {
-            build.onStart(async () => {
-              const cwd = build.initialOptions.outdir ?? projectRoot
-
-              const outDirectory = path.resolve(cwd, '.bronya')
-
-              fs.rmSync(outDirectory, { recursive: true, force: true })
+            build.onEnd(async () => {
+              const outDirectory = build.initialOptions.outdir ?? projectRoot
 
               fs.mkdirSync(outDirectory, { recursive: true })
 
@@ -54,8 +48,6 @@ class MyStack extends Stack {
                   path.join(outDirectory, queryEngineFile),
                 ),
               )
-
-              fs.copyFileSync(prismaSchema, path.join(outDirectory, 'schema.prisma'))
 
               queryEngines.forEach((queryEngineFile) =>
                 fs.chmodSync(path.join(outDirectory, queryEngineFile), 0o755),

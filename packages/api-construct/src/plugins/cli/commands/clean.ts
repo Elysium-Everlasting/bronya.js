@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 
 import type { CliPlugin } from '@bronya.js/core'
 
@@ -18,7 +19,8 @@ export function cleanCommandCliPlugin(api: Api, _rootOptions: CleanCommandOption
 
     extend(cli) {
       cli.command('clean-api [directory]').action(async (args, _options) => {
-        cleanNestedDirectories(args.directory ?? api.config.outDirectory)
+        const root = path.join(api.root, api.config.directory)
+        cleanNestedDirectories(args.directory ?? api.config.outDirectory, root)
       })
     },
   }
@@ -27,8 +29,8 @@ export function cleanCommandCliPlugin(api: Api, _rootOptions: CleanCommandOption
 /**
  * Given a file path, clean all nested directories with the file path.
  */
-function cleanNestedDirectories(directoryName: string) {
-  findSubdirectoriesWithFile(directoryName).forEach((directory) => {
-    fs.rmSync(directory, { recursive: true, force: true })
+function cleanNestedDirectories(directoryName: string, root = process.cwd()) {
+  findSubdirectoriesWithFile(directoryName, root).forEach((directory) => {
+    fs.rmSync(path.join(directory, directoryName), { recursive: true, force: true })
   })
 }

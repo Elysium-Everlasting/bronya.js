@@ -6,7 +6,8 @@
   "scripts": {
     "dep": "cdk --app 'pnpm tsx bronya.config.ts' deploy",
     "des": "cdk --app 'pnpm tsx bronya.config.ts' destroy",
-    "dev": "bunny dev-api"
+    "dev": "bunny dev-api",
+    "clean": "bunny clean-api"
   },
   "dependencies": {
     "@bronya.js/api-construct": "workspace:^",

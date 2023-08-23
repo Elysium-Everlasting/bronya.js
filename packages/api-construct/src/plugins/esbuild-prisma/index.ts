@@ -6,17 +6,15 @@ import type { Plugin } from 'esbuild'
 import type { Api } from '../../api.js'
 import { getClosestProjectDirectory } from '../../utils/project.js'
 
-const projectRoot = getClosestProjectDirectory()
-
-const prismaClientDirectory = path.resolve(projectRoot, 'node_modules', 'prisma')
-
-const prismaSchema = path.resolve(projectRoot, 'prisma', 'schema.prisma')
-
 export function createEsbuildPrismaPlugin(api: Api): Plugin {
   return {
     name: 'esbuild-prisma',
     setup(build) {
       build.onStart(async () => {
+        const projectRoot = getClosestProjectDirectory()
+
+        const prismaClientDirectory = path.resolve(projectRoot, 'node_modules', 'prisma')
+
         const cwd = build.initialOptions.outdir ?? projectRoot
 
         const outDirectory = path.resolve(cwd, api.config.outDirectory)
@@ -35,8 +33,6 @@ export function createEsbuildPrismaPlugin(api: Api): Plugin {
             path.join(outDirectory, queryEngineFile),
           ),
         )
-
-        fs.copyFileSync(prismaSchema, path.join(outDirectory, 'schema.prisma'))
 
         queryEngines.forEach((queryEngineFile) =>
           fs.chmodSync(path.join(outDirectory, queryEngineFile), 0o755),
