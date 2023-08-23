@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import { App, Stack } from 'aws-cdk-lib/core'
 import { isCdk } from '@bronya.js/core'
 import { Api } from '@bronya.js/api-construct'
+import { createCliPlugin } from '@bronya.js/api-construct/plugins/cli'
 
 /**
  * @see https://github.com/evanw/esbuild/issues/1921#issuecomment-1491470829
@@ -24,6 +25,13 @@ const prismaSchema = path.resolve(projectRoot, 'prisma', 'schema.prisma')
 
 class MyStack extends Stack {
   api = new Api(this, 'super-awesome-api-v2', {
+    plugins: [
+      createCliPlugin({
+        dev: {
+          port: 3000,
+        },
+      }),
+    ],
     esbuild: {
       format: 'esm',
       platform: 'node',
