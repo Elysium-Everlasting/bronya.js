@@ -283,7 +283,7 @@ export class Api extends BronyaConstruct {
           return route ? resource.getResource(route) ?? resource.addResource(route) : resource
         }, api.root)
 
-        route.methods.forEach((httpMethod) => {
+        for (const httpMethod of route.methods) {
           const getFunctionProps =
             props.constructs?.functionProps ?? route.constructs?.functionProps
 
@@ -317,7 +317,7 @@ export class Api extends BronyaConstruct {
             }
           })
 
-          this.config.constructs?.lambdaUpload?.(uploadDirectory)
+          await this.config.constructs?.lambdaUpload?.(uploadDirectory)
 
           const defaultFunctionProps: aws_lambda.FunctionProps = {
             functionName,
@@ -383,7 +383,7 @@ export class Api extends BronyaConstruct {
           }
 
           functions[httpMethod] = functionResources
-        })
+        }
       }),
     )
 
