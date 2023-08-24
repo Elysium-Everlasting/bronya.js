@@ -1,5 +1,12 @@
 # @bronya.js/cli
 
+## 0.10.3
+
+### Patch Changes
+
+- 59a0b69: feat: expose api prop overrides
+- 86ada81: feat: await lambda upload modifications
+
 ## 0.10.2
 
 ### Patch Changes
