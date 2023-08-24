@@ -306,18 +306,15 @@ export class Api extends BronyaConstruct {
            */
           const uploadDirectory = this.tree.directoryToUploadDirectory(route.directory)
 
-          /**
-           * @example /home/user/project/src/.bronya/v1/rest/calendar/handler.js
-           */
-          const handlerFileSource = path.join(outDirectory, route.exitPoint)
+          fs.mkdirSync(uploadDirectory, { recursive: true })
 
-          /**
-           * @example /home/user/project/src/.bronya/v1/rest/calendar/dist/handler.js
-           */
-          const handlerFileDestination = path.join(uploadDirectory, route.exitPoint)
-
-          fs.mkdirSync(path.dirname(handlerFileDestination), { recursive: true })
-          fs.copyFileSync(handlerFileSource, handlerFileDestination)
+          // Copy all files from the out directory to the upload directory.
+          fs.readdirSync(outDirectory).forEach((file) => {
+            const sourceFile = path.join(outDirectory, file)
+            if (fs.lstatSync(sourceFile).isFile()) {
+              fs.copyFileSync(sourceFile, path.join(uploadDirectory, file))
+            }
+          })
 
           this.config.constructs?.lambdaUpload?.(uploadDirectory)
 
