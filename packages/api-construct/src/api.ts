@@ -144,6 +144,11 @@ export interface FunctionResources {
 }
 
 /**
+ * A handler can export a `overrides` object to override the default route configuration.
+ */
+export type ApiPropsOverride = DeepPartial<ApiProps>
+
+/**
  */
 export class Api extends BronyaConstruct {
   public static readonly type = 'API' as const
@@ -240,8 +245,7 @@ export class Api extends BronyaConstruct {
           ? (require ??= createRequire(__filename))(file)
           : await import(`${file}?update=${Date.now()}`)
 
-      const overrides: DeepPartial<RouteInfo> =
-        exports?.default?.overrides ?? exports?.overrides ?? {}
+      const overrides: ApiPropsOverride = exports?.default?.overrides ?? exports?.overrides ?? {}
 
       this.routes[directory] = {
         ...this.config,
