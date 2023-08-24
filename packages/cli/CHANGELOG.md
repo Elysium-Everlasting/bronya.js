@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.8.1
+
+### Patch Changes
+
+- e05bc4a: chore: version bump
+
 ## 0.8.0
 
 ### Minor Changes
