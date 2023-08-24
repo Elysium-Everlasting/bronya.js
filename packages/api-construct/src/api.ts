@@ -71,7 +71,7 @@ export interface ApiConstructProps {
    */
   restApiProps?: (scope: Api, id: string) => aws_apigateway.RestApiProps
 
-  functionProps?: (scope: Api, id: string) => aws_lambda.FunctionProps
+  functionProps?: (scope: Api, id: string) => Partial<aws_lambda.FunctionProps>
 
   lambdaIntegrationOptions?: (
     scope: Api,
