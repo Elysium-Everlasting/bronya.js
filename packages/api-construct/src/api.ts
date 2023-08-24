@@ -309,7 +309,7 @@ export class Api extends BronyaConstruct {
     const functions: Record<string, FunctionResources> = {}
 
     await Promise.all(
-      Object.entries(this.routes).map(async ([directory, route]) => {
+      Object.entries(this.routes).map(async ([_directory, route]) => {
         await buildApiRoute(route)
 
         /**
@@ -325,11 +325,6 @@ export class Api extends BronyaConstruct {
         const resource = routeEndpoint.split('/').reduce((resource, route) => {
           return route ? resource.getResource(route) ?? resource.addResource(route) : resource
         }, api.root)
-
-        /**
-         * Relative out directory used to set handler for AWS Lambda.
-         */
-        const outDirectory = path.relative(directory, route.outDirectory)
 
         route.methods.forEach((httpMethod) => {
           const getFunctionProps =
@@ -348,8 +343,8 @@ export class Api extends BronyaConstruct {
           const defaultFunctionProps: aws_lambda.FunctionProps = {
             functionName,
             runtime: aws_lambda.Runtime.NODEJS_18_X,
-            code: aws_lambda.Code.fromAsset(directory, { exclude: ['node_modules'] }),
-            handler: path.join(outDirectory, route.exitPoint.replace(/\..?js$/, `.${httpMethod}`)),
+            code: aws_lambda.Code.fromAsset(route.outDirectory),
+            handler: path.join(route.exitPoint.replace(/\..?js$/, `.${httpMethod}`)),
             architecture: aws_lambda.Architecture.ARM_64,
             environment: { ...route.environment },
             timeout: aws_core.Duration.seconds(15),

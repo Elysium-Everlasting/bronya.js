@@ -298,11 +298,7 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
 
     routers[apiRouteInfo.directory] = Router()
 
-    const file = path.resolve(
-      apiRouteInfo.directory,
-      apiRouteInfo.outDirectory,
-      apiRouteInfo.exitPoint,
-    )
+    const file = path.resolve(apiRouteInfo.outDirectory, apiRouteInfo.exitPoint)
 
     /**
      * Possible TODO/FIXME: this leaks memory.
