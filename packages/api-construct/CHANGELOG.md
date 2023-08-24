@@ -1,5 +1,14 @@
 # @bronya.js/api-construct
 
+## 0.8.1
+
+### Patch Changes
+
+- e05bc4a: chore: version bump
+- Updated dependencies [e05bc4a]
+  - @bronya.js/cli@0.8.1
+  - @bronya.js/core@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes
