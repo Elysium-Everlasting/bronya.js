@@ -13,6 +13,7 @@ import type { BuildOptions } from 'esbuild'
 import { isHttpMethod, warmerRequestBody } from './integrations/lambda/index.js'
 import type { ApiPlugin } from './plugins/index.js'
 import { buildApiRoute } from './scripts/build.js'
+import { toValidAwsName } from './utils/aws-naming.js'
 import type { DeepPartial } from './utils/deep-partial.js'
 import { findDirectoriesWithFile } from './utils/directories.js'
 import {
@@ -292,7 +293,7 @@ export class Api extends BronyaConstruct {
           const getMethodOptions =
             props.constructs?.methodOptions ?? route.constructs?.methodOptions
 
-          const functionName = `${this.id}-${routeEndpoint}-${httpMethod}`.replace(/\//g, '-')
+          const functionName = toValidAwsName(`${this.id}-${routeEndpoint}-${httpMethod}`)
 
           const customFunctionProps = getFunctionProps?.(this, this.id)
 
