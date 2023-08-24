@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -14,59 +15,17 @@ import type { ApiPlugin } from './plugins/index.js'
 import { buildApiRoute } from './scripts/build.js'
 import type { DeepPartial } from './utils/deep-partial.js'
 import { findDirectoriesWithFile } from './utils/directories.js'
+import {
+  resolveDirectoryTree,
+  type DirectoryTreeDetails,
+  type ResolvedDirectoryTree,
+} from './utils/directory-tree.js'
 import { getClosestProjectDirectory } from './utils/project.js'
 
 /**
  * The root API construct can configure the follow settings as defaults for all routes.
  */
-export interface ApiProps {
-  /**
-   * The project root directory.
-   *
-   * @default process.cwd()
-   *
-   * @example
-   *  root
-   * ├──  package.json
-   * └──  src
-   *     ├──  sub-route
-   *     │   └──  +endpoint.ts
-   *     └──  +endpoint.ts
-   */
-  root: string
-
-  /**
-   * Directory to look for API routes, Relative from {@link root}.
-   *
-   * @default 'src'
-   */
-  directory: string
-
-  /**
-   * Filename indicating an endpoint.
-   *
-   * @default '+endpoint.ts'
-   */
-  entryPoint: string
-
-  /**
-   * The cache directory to build the endpoint handler files to.
-   *
-   * This is created in every directory with an endpoint.
-   *
-   * @default '.bronya'
-   */
-  outDirectory: string
-
-  /**
-   * The built output file, relative from {@link outDirectory}, **with the JS extension**.
-   *
-   * This is the file that the AWS Lambda Function will set as the handler.
-   *
-   * @default 'handler.js'
-   */
-  exitPoint: string
-
+export interface ApiProps extends DirectoryTreeDetails {
   /**
    * Controls how/what AWS constructs are created.
    */
@@ -131,6 +90,13 @@ export interface ApiConstructProps {
    *
    * warmingRuleProps?: (scope: Api, id: string, methodAndRoute: string) => aws_events.RuleProps
    */
+
+  /**
+   * The directory that will be uploaded to the Lambda Function.
+   *
+   * User can modify the directory before uploading.
+   */
+  lambdaUpload?: (directory: string) => unknown
 }
 
 /**
@@ -140,9 +106,9 @@ export interface RouteInfo extends ApiProps {
   /**
    * The API route.
    *
-   * @example v1/rest/calendar
+   * @example /v1/rest/calendar
    *
-   * @remarks Does __not__ include the leading slash.
+   * @remarks **Does include** the leading slash.
    */
   endpoint: string
 
@@ -198,11 +164,6 @@ export class Api extends BronyaConstruct {
   public id: string
 
   /**
-   * The root directory of the API. i.e. project root.
-   */
-  public root: string
-
-  /**
    * Route information is available after initializing.
    */
   public routes: Record<string, RouteInfo> = {}
@@ -212,6 +173,8 @@ export class Api extends BronyaConstruct {
    */
   public config: ApiProps
 
+  public tree: ResolvedDirectoryTree
+
   constructor(scope: Construct, id: string, config: Partial<ApiProps> = {}) {
     super(scope, id)
 
@@ -219,14 +182,13 @@ export class Api extends BronyaConstruct {
 
     this.scope = scope
 
-    this.root = config.root ?? getClosestProjectDirectory()
-
     this.config = {
-      root: process.cwd(),
+      root: config.root ?? getClosestProjectDirectory(),
       directory: 'src',
       entryPoint: '+endpoint.ts',
       outDirectory: '.bronya',
       exitPoint: 'handler.js',
+      uploadDirectory: 'dist',
       esbuild: {},
       constructs: {},
       environment: {},
@@ -238,6 +200,8 @@ export class Api extends BronyaConstruct {
       const pluginArray = Array.isArray(plugins) ? plugins : [plugins]
       this.plugins.push(...pluginArray)
     }
+
+    this.tree = resolveDirectoryTree(this.config)
   }
 
   /**
@@ -249,23 +213,20 @@ export class Api extends BronyaConstruct {
      */
     let require: NodeRequire
 
-    const apiRoutesDirectory = path.resolve(this.root, this.config.directory)
-
-    const entryFileName = this.config.entryPoint ?? '+endpoint.ts'
-
-    const projects = findDirectoriesWithFile(entryFileName, apiRoutesDirectory)
-
-    const apiRoutesRootDirectory = path.resolve(this.root, apiRoutesDirectory)
+    const filesWithEntrypoints = findDirectoriesWithFile(this.tree.entryPoint, this.tree.directory)
 
     const processDirectory = async (
       directory: string,
-      endpoint = path.join('/', path.relative(apiRoutesRootDirectory, directory)),
+      endpoint = this.tree.directoryToEndpoint(directory),
     ) => {
       const entryPoint = path.resolve(directory, this.config.entryPoint)
 
       const exitPoint = this.config.exitPoint ?? path.basename(entryPoint)
 
-      const outDirectory = path.resolve(directory, this.config.outDirectory)
+      /**
+       * @example /home/user/project/src/.bronya/v1/rest/calendar
+       */
+      const outDirectory = this.tree.directoryToOutDirectory(directory)
 
       const esbuild = this.config.esbuild
 
@@ -293,7 +254,7 @@ export class Api extends BronyaConstruct {
       }
     }
 
-    await Promise.all(projects.map(async (directory) => processDirectory(directory)))
+    await Promise.all(filesWithEntrypoints.map(async (directory) => processDirectory(directory)))
   }
 
   /**
@@ -313,15 +274,10 @@ export class Api extends BronyaConstruct {
         await buildApiRoute(route)
 
         /**
-         * Normalize the endpoint to remove the leading slash.
+         * Trim leading slash because API Gateway doesn't need to process it.
          */
-        const routeEndpoint = path.normalize(route.endpoint).replace(/^\//, '')
+        const routeEndpoint = route.endpoint.replace(/^\//, '')
 
-        /**
-         * In-case the endpoint starts with a slash, trim it.
-         *
-         * @example /v1/rest/calendar -> v1/rest/calendar
-         */
         const resource = routeEndpoint.split('/').reduce((resource, route) => {
           return route ? resource.getResource(route) ?? resource.addResource(route) : resource
         }, api.root)
@@ -340,10 +296,35 @@ export class Api extends BronyaConstruct {
 
           const customFunctionProps = getFunctionProps?.(this, this.id)
 
+          /**
+           * @example /home/user/project/src/.bronya/v1/rest/calendar
+           */
+          const outDirectory = this.tree.directoryToOutDirectory(route.directory)
+
+          /**
+           * @example /home/user/project/src/.bronya/v1/rest/calendar/dist
+           */
+          const uploadDirectory = this.tree.directoryToUploadDirectory(route.directory)
+
+          /**
+           * @example /home/user/project/src/.bronya/v1/rest/calendar/handler.js
+           */
+          const handlerFileSource = path.join(outDirectory, route.exitPoint)
+
+          /**
+           * @example /home/user/project/src/.bronya/v1/rest/calendar/dist/handler.js
+           */
+          const handlerFileDestination = path.join(uploadDirectory, route.exitPoint)
+
+          fs.mkdirSync(path.dirname(handlerFileDestination), { recursive: true })
+          fs.copyFileSync(handlerFileSource, handlerFileDestination)
+
+          this.config.constructs?.lambdaUpload?.(uploadDirectory)
+
           const defaultFunctionProps: aws_lambda.FunctionProps = {
             functionName,
             runtime: aws_lambda.Runtime.NODEJS_18_X,
-            code: aws_lambda.Code.fromAsset(route.outDirectory),
+            code: aws_lambda.Code.fromAsset(uploadDirectory),
             handler: path.join(route.exitPoint.replace(/\..?js$/, `.${httpMethod}`)),
             architecture: aws_lambda.Architecture.ARM_64,
             environment: { ...route.environment },

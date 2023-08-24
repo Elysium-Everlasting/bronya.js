@@ -19,7 +19,7 @@ export function cleanCommandCliPlugin(api: Api, _rootOptions: CleanCommandOption
 
     extend(cli) {
       cli.command('clean-api [directory]').action(async (args, _options) => {
-        const root = path.join(api.root, api.config.directory)
+        const root = path.join(api.config.root, api.config.directory)
         cleanNestedDirectories(args.directory ?? api.config.outDirectory, root)
       })
     },

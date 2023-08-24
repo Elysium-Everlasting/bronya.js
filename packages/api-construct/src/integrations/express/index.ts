@@ -2,12 +2,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { getClosestProjectDirectory } from '@bronya.js/core/utils'
-import type {
-  APIGatewayProxyHandler,
-  APIGatewayProxyCallback,
-  APIGatewayProxyEvent,
-  Context,
-} from 'aws-lambda'
+import type { APIGatewayProxyHandler } from 'aws-lambda'
 import bodyParser from 'body-parser'
 import { watch } from 'chokidar'
 import { consola } from 'consola'
@@ -16,6 +11,8 @@ import express, { Router, type Handler } from 'express'
 
 import type { Api, RouteInfo } from '../../api.js'
 import { buildApiRoute } from '../../scripts/build.js'
+
+import { expressRequestToApiGatewayParams } from './request.js'
 
 /**
  * Translates the HTTP verbs for API Gateway into ExpressJS methods.
@@ -37,28 +34,6 @@ function isMethod(method: string): method is keyof typeof HttpMethodsToExpress {
   return method in HttpMethodsToExpress
 }
 
-function noop() {
-  /* noop */
-}
-
-/**
- * Type guard that asserts the value of an object entry is not null.
- */
-function entryValueNotNull<T>(v: [string, T]): v is [string, NonNullable<T>] {
-  return v != null
-}
-
-/**
- * Given some dumb looking object, return a nicer looking one.
- */
-function normalizeRecord(headers: unknown): Record<string, string> {
-  const headerEntries = Object.entries(headers ?? {})
-    .filter(entryValueNotNull)
-    .map(([k, v]) => [k, Array.isArray(v) ? (v.length === 1 ? v[0] : v) : v])
-
-  return Object.fromEntries(headerEntries)
-}
-
 /**
  * Convert path parameters from an API Gateway path to an Express.js path.
  *
@@ -70,99 +45,7 @@ function apiGatewayPathToExpressPath(apiGatewayPath: string): string {
 
 function wrapExpressHandler(handler: APIGatewayProxyHandler): Handler {
   return async (req, res, next) => {
-    const callback: APIGatewayProxyCallback = (error, response) => {
-      if (error) {
-        next(error)
-        return
-      }
-
-      if (response == null) {
-        next(new Error('No response from handler'))
-        return
-      }
-
-      res.status(response.statusCode ?? 200).json(response.body)
-    }
-
-    let headers: Record<string, string | string>
-
-    let query: Record<string, string | string>
-
-    const event: APIGatewayProxyEvent = {
-      body: req.body,
-      get headers() {
-        headers ??= normalizeRecord(req.headers)
-        return headers
-      },
-      get multiValueHeaders() {
-        return {}
-      },
-      httpMethod: req.method,
-      get isBase64Encoded() {
-        return false
-      },
-      path: req.path,
-      pathParameters: req.params,
-      get queryStringParameters() {
-        query ??= normalizeRecord(req.query)
-        return query
-      },
-      get multiValueQueryStringParameters() {
-        return {}
-      },
-      stageVariables: null,
-      requestContext: {
-        accountId: '',
-        apiId: '',
-        authorizer: {},
-        protocol: '',
-        httpMethod: req.method,
-        identity: {
-          accessKey: null,
-          accountId: null,
-          apiKey: null,
-          apiKeyId: null,
-          caller: null,
-          clientCert: null,
-          cognitoAuthenticationProvider: null,
-          cognitoAuthenticationType: null,
-          cognitoIdentityId: null,
-          cognitoIdentityPoolId: null,
-          principalOrgId: null,
-          sourceIp: '',
-          user: null,
-          userAgent: null,
-          userArn: null,
-        },
-        path: req.path,
-        stage: '',
-        requestId: '',
-        requestTimeEpoch: 0,
-        resourceId: '',
-        resourcePath: '',
-      },
-      resource: '',
-    }
-
-    const context: Context = {
-      callbackWaitsForEmptyEventLoop: true,
-      functionName: '',
-      functionVersion: '',
-      invokedFunctionArn: '',
-      memoryLimitInMB: '',
-      awsRequestId: '',
-      logGroupName: '',
-      logStreamName: '',
-      identity: undefined,
-
-      getRemainingTimeInMillis() {
-        return 69
-      },
-
-      done: noop,
-      fail: noop,
-      succeed: noop,
-    }
+    const { event, context, callback } = expressRequestToApiGatewayParams(req, res, next)
 
     const result = await handler(event, context, callback)
 
@@ -228,7 +111,7 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
 
   const currentProject = getClosestProjectDirectory()
 
-  if (api.root === currentProject) {
+  if (api.config.root === currentProject) {
     consola.info(
       `🎏 Starting root dev server. All endpoints from ${api.config.directory} will be served.`,
     )
@@ -338,9 +221,8 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
       })
   }
 
-  /**
-   * Prepare the development server by loading all the endpoints and refreshing the routes.
-   */
+  // Prepare the development server by loading all the endpoints and refreshing the routes.
+
   await Promise.all(apiRoutes.map(loadEndpoint)).then(refreshRouter)
 
   app.listen(developmentOptions.port, () => {
@@ -353,9 +235,9 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
     path.resolve(currentProject, apiRoute.directory, apiRoute.outDirectory),
   )
 
-  //---------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------
   // Watch file changes.
-  //---------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------
 
   const watcher = watch(apiRoutePaths, {
     ignored: [

@@ -29,33 +29,11 @@ class MyStack extends Stack {
       platform: 'node',
       bundle: true,
       banner: { js },
-      plugins: [
-        {
-          name: 'copy',
-          setup(build) {
-            build.onEnd(async () => {
-              const outDirectory = build.initialOptions.outdir ?? projectRoot
-
-              fs.mkdirSync(outDirectory, { recursive: true })
-
-              const queryEngines = fs
-                .readdirSync(prismaClientDirectory)
-                .filter((file) => file.endsWith('.so.node'))
-
-              queryEngines.forEach((queryEngineFile) =>
-                fs.copyFileSync(
-                  path.join(prismaClientDirectory, queryEngineFile),
-                  path.join(outDirectory, queryEngineFile),
-                ),
-              )
-
-              queryEngines.forEach((queryEngineFile) =>
-                fs.chmodSync(path.join(outDirectory, queryEngineFile), 0o755),
-              )
-            })
-          },
-        },
-      ],
+    },
+    constructs: {
+      lambdaUpload(directory) {
+        console.log({ directory })
+      },
     },
   })
 
