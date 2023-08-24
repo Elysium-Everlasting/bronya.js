@@ -1,5 +1,13 @@
 # @bronya.js/core
 
+## 0.10.2
+
+### Patch Changes
+
+- 11d69e2: feat: more sophisticated encoding for function name
+- Updated dependencies [11d69e2]
+  - @bronya.js/cli@0.10.2
+
 ## 0.10.1
 
 ### Patch Changes
