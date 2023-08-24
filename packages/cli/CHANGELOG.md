@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.10.4
+
+### Patch Changes
+
+- 35dc6f3: feat: partial function props
+
 ## 0.10.3
 
 ### Patch Changes

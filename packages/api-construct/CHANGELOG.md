@@ -1,5 +1,14 @@
 # @bronya.js/api-construct
 
+## 0.10.4
+
+### Patch Changes
+
+- 35dc6f3: feat: partial function props
+- Updated dependencies [35dc6f3]
+  - @bronya.js/cli@0.10.4
+  - @bronya.js/core@0.10.4
+
 ## 0.10.3
 
 ### Patch Changes
