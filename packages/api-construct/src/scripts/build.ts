@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+
 import { build } from 'esbuild'
 
 import type { RouteInfo } from '../api.js'
@@ -16,6 +18,8 @@ export async function buildApiRoute(apiRouteBuildOptions: BuildOptions) {
   esbuildOptions.entryPoints ??= {
     [apiRouteBuildOptions.exitPoint.replace(/\..?js$/, '')]: apiRouteBuildOptions.entryPoint,
   }
+
+  fs.rmSync(esbuildOptions.outdir, { recursive: true, force: true })
 
   const buildOutput = await build(esbuildOptions)
 
