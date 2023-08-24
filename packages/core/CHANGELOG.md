@@ -1,5 +1,16 @@
 # @bronya.js/core
 
+## 0.9.0
+
+### Minor Changes
+
+- 93a38f8: fix: dev server should find parent directory of changed file, not project root
+
+### Patch Changes
+
+- Updated dependencies [93a38f8]
+  - @bronya.js/cli@0.9.0
+
 ## 0.8.1
 
 ### Patch Changes
