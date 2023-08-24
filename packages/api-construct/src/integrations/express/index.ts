@@ -369,8 +369,8 @@ export async function startExpressApiDevelopmentServer(api: Api, overrides: Serv
     ],
   })
 
-  watcher.on('change', async (path) => {
-    const endpoint = getClosestProjectDirectory(path)
+  watcher.on('change', async (fileChanged) => {
+    const endpoint = path.dirname(fileChanged)
 
     consola.success('✨ endpoint changed: ', endpoint)
 
