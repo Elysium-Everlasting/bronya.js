@@ -1,5 +1,12 @@
 # @bronya.js/cli
 
+## 0.9.2
+
+### Patch Changes
+
+- 8dedd55: feat: adjusted regex and only upload the build directory
+- 8dedd55: fix: the handler route is relative from the build directory
+
 ## 0.9.1
 
 ### Patch Changes
