@@ -1,5 +1,13 @@
 # @bronya.js/core
 
+## 0.10.1
+
+### Patch Changes
+
+- 1e07017: feat: copy all top-level files from the out directory to be uploaded
+- Updated dependencies [1e07017]
+  - @bronya.js/cli@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes
