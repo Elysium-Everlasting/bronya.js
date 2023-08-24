@@ -1,5 +1,15 @@
 # @bronya.js/cli
 
+## 0.10.0
+
+### Minor Changes
+
+- f47f030: refactor: different file directory structure and testing
+
+### Patch Changes
+
+- 52d320b: feat: make sure directory is deleted before building
+
 ## 0.9.2
 
 ### Patch Changes
