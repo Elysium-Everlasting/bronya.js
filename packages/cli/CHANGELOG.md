@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.9.1
+
+### Patch Changes
+
+- 4c28b5b: fix: proper regex replace the js file path
+
 ## 0.9.0
 
 ### Minor Changes
