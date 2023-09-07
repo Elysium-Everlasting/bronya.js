@@ -4,7 +4,7 @@ import { buildCommandCliPlugin, type BuildCommandOptions } from './commands/buil
 import { cleanCommandCliPlugin, type CleanCommandOptions } from './commands/clean.js'
 import { devCommandCliPlugin, type DevCommandOptions } from './commands/dev.js'
 
-interface CreateApiPluginOptions {
+export interface CreateApiPluginOptions {
   dev?: DevCommandOptions
   clean?: CleanCommandOptions
   build?: BuildCommandOptions
@@ -22,3 +22,7 @@ export function createApiCliPlugins(options: CreateApiPluginOptions = {}): ApiPl
     devCommandCliPlugin(api, options.dev),
   ]
 }
+
+export type { BuildCommandOptions } from './commands/build.js'
+export type { CleanCommandOptions } from './commands/clean.js'
+export type { DevCommandOptions } from './commands/dev.js'
