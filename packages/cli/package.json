@@ -1,6 +1,6 @@
 {
   "name": "@bronya.js/cli",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "description": "type-safe cli builder inspired by cac",
   "license": "MIT",
   "homepage": "https://elysium-everlasting.github.io/bronya.js",

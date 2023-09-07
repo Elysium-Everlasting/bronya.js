@@ -1,5 +1,16 @@
 # @bronya.js/api-construct
 
+## 0.10.7
+
+### Patch Changes
+
+- 62b25ae: feat: forward the different options for cli commands
+- 72aad71: fix: actually forward the dev options
+- Updated dependencies [62b25ae]
+- Updated dependencies [72aad71]
+  - @bronya.js/cli@0.10.7
+  - @bronya.js/core@0.10.7
+
 ## 0.10.6
 
 ### Patch Changes
