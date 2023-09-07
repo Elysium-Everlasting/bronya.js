@@ -1,5 +1,13 @@
 # @bronya.js/example-basic
 
+## 0.1.21
+
+### Patch Changes
+
+- Updated dependencies [9595e3a]
+  - @bronya.js/api-construct@0.10.6
+  - @bronya.js/core@0.10.6
+
 ## 0.1.20
 
 ### Patch Changes
