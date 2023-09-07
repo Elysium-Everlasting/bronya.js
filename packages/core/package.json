@@ -53,13 +53,13 @@
   "typesVersions": {
     "*": {
       "": [
-        "dist/index.d.ts"
+        "./dist/index.d.ts"
       ],
       "api": [
-        "dist/api.d.ts"
+        "./dist/api.d.ts"
       ],
       "utils": [
-        "dist/utils.d.ts"
+        "./dist/utils.d.ts"
       ]
     }
   },

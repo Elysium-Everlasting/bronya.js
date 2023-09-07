@@ -50,13 +50,13 @@
   "typesVersions": {
     "*": {
       "": [
-        "dist/index.d.ts"
+        "./dist/index.d.ts"
       ],
       "plugins/*": [
-        "dist/plugins/*.d.ts"
+        "./dist/plugins/*.d.ts"
       ],
       "integrations/*": [
-        "dist/integrations/*.d.ts"
+        "./dist/integrations/*.d.ts"
       ]
     }
   },
