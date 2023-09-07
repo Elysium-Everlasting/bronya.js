@@ -5,11 +5,11 @@
     "emitDecoratorMetadata": true,
 
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "Node",
     "baseUrl": ".",
-    "resolvePackageJsonExports": true,
-    "resolvePackageJsonImports": true,
-    "resolveJsonModule": true,
+    // "resolvePackageJsonExports": true,
+    // "resolvePackageJsonImports": true,
+    // "resolveJsonModule": true,
     "allowArbitraryExtensions": true,
 
     "allowJs": true,
