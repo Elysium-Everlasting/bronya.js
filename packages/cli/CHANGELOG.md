@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.10.5
+
+### Patch Changes
+
+- 9518d99: fix: types versions and import paths
+
 ## 0.10.4
 
 ### Patch Changes
