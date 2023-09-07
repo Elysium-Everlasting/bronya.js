@@ -40,7 +40,7 @@
       "default": "./dist/index.js"
     }
   },
-  "typesVersion": {
+  "typesVersions": {
     "*": {
       "": [
         "dist/index.d.ts"

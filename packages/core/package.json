@@ -50,15 +50,15 @@
       "default": "./dist/utils.js"
     }
   },
-  "typesVersion": {
+  "typesVersions": {
     "*": {
-      ".": [
+      "": [
         "dist/index.d.ts"
       ],
-      "./api": [
+      "api": [
         "dist/api.d.ts"
       ],
-      "./utils": [
+      "utils": [
         "dist/utils.d.ts"
       ]
     }

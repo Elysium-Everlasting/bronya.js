@@ -47,15 +47,15 @@
       "default": "./dist/integrations/*.js"
     }
   },
-  "typesVersion": {
+  "typesVersions": {
     "*": {
-      ".": [
+      "": [
         "dist/index.d.ts"
       ],
-      "./plugins/*": [
+      "plugins/*": [
         "dist/plugins/*.d.ts"
       ],
-      "./integrations/*": [
+      "integrations/*": [
         "dist/integrations/*.d.ts"
       ]
     }

@@ -1,5 +1,5 @@
-import path from 'node:path'
-import fs from 'node:fs'
+// import fs from 'node:fs'
+// import path from 'node:path'
 import { App, Stack } from 'aws-cdk-lib/core'
 import { isCdk } from '@bronya.js/core'
 import { Api } from '@bronya.js/api-construct'
@@ -16,10 +16,12 @@ const require = topLevelCreateRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 `
-const projectRoot = process.cwd()
+// const projectRoot = process.cwd()
 
-// The relative path to the generated Prisma Client.
-const prismaClientDirectory = path.resolve(projectRoot, 'node_modules', 'prisma')
+/**
+ * The relative path to the generated Prisma Client.
+ */
+// const prismaClientDirectory = path.resolve(projectRoot, 'node_modules', 'prisma')
 
 class MyStack extends Stack {
   api = new Api(this, 'super-awesome-api-v2', {
