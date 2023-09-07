@@ -28,6 +28,7 @@ export function devCommandCliPlugin(api: Api, rootOptions?: DevCommandOptions): 
         )
         .action(async (_args, options) => {
           await startExpressApiDevelopmentServer(api, {
+            ...rootOptions,
             port: options.port ? parseInt(options.port, 10) : rootOptions?.port,
             host: options.host ?? rootOptions?.host,
             protocol: options.protocol ?? rootOptions?.protocol,
