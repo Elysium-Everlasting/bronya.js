@@ -29,7 +29,7 @@ export interface ApiGatewayParams {
   callback: APIGatewayProxyCallback
 }
 
-export function expressRequestToApiGatewayParams(
+export function expressParamsToApiGatewayParams(
   req: Request,
   res: Response,
   next: NextFunction,
