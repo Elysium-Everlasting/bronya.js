@@ -1,5 +1,13 @@
 # @bronya.js/core
 
+## 0.10.8
+
+### Patch Changes
+
+- c179992: feat: function plugins and removed built-in support for warming rule
+- Updated dependencies [c179992]
+  - @bronya.js/cli@0.10.8
+
 ## 0.10.7
 
 ### Patch Changes
