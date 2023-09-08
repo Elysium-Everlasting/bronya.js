@@ -1,5 +1,13 @@
 # @bronya.js/core
 
+## 0.10.9
+
+### Patch Changes
+
+- 3841d5f: feat: handle headers during base64encoding
+- Updated dependencies [3841d5f]
+  - @bronya.js/cli@0.10.9
+
 ## 0.10.8
 
 ### Patch Changes
