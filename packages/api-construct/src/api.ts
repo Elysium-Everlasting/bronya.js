@@ -4,13 +4,11 @@ import path from 'node:path'
 
 import { BronyaConstruct, Construct } from '@bronya.js/core'
 import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
-import * as aws_events from 'aws-cdk-lib/aws-events'
-import * as aws_events_targets from 'aws-cdk-lib/aws-events-targets'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import * as aws_core from 'aws-cdk-lib/core'
 import type { BuildOptions } from 'esbuild'
 
-import { isHttpMethod, warmerRequestBody } from './integrations/lambda/index.js'
+import { isHttpMethod } from './integrations/lambda/index.js'
 import type { ApiPlugin } from './plugins/index.js'
 import { buildApiRoute } from './scripts/build.js'
 import { toValidAwsName } from './utils/aws-naming.js'
@@ -21,6 +19,8 @@ import {
   type DirectoryTreeDetails,
   type ResolvedDirectoryTree,
 } from './utils/directory-tree.js'
+import type { MaybePromise } from './utils/maybe-promise.js'
+import type { Nullish } from './utils/nullish.js'
 import { getClosestProjectDirectory } from './utils/project.js'
 
 /**
@@ -61,6 +61,14 @@ export interface SynthProps {
 }
 
 /**
+ * A function plugin can modify the AWS constructs.
+ * If it returns something non-nullish, it will override the original resources.
+ */
+export type FunctionPlugin = (
+  functionResources: FunctionResources,
+) => MaybePromise<FunctionResources | Nullish>
+
+/**
  * Control how/what AWS constructs are created.
  */
 export interface ApiConstructProps {
@@ -82,22 +90,16 @@ export interface ApiConstructProps {
   methodOptions?: (scope: Api, id: string, methodAndRoute: string) => aws_apigateway.MethodOptions
 
   /**
-   * Doesn't override props; just indicates whether to also create a warming rule.
-   */
-  includeWarmers?: boolean
-
-  /**
-   * TODO: warming rule props?
-   *
-   * warmingRuleProps?: (scope: Api, id: string, methodAndRoute: string) => aws_events.RuleProps
-   */
-
-  /**
    * The directory that will be uploaded to the Lambda Function.
    *
    * User can modify the directory before uploading.
    */
   lambdaUpload?: (directory: string) => unknown
+
+  /**
+   * Plugins that can modify the AWS constructs.
+   */
+  functionPlugin?: FunctionPlugin | FunctionPlugin[]
 }
 
 /**
@@ -130,17 +132,13 @@ export interface RouteInfo extends ApiProps {
 export interface FunctionResources {
   functionProps: aws_lambda.FunctionProps
 
-  function: aws_lambda.Function
+  handler: aws_lambda.Function
 
   lambdaIntegrationOptions?: aws_apigateway.LambdaIntegrationOptions
 
   lambdaIntegration?: aws_apigateway.LambdaIntegration
 
   methodOptions?: aws_apigateway.MethodOptions
-
-  warmingTarget?: aws_events_targets.LambdaFunction
-
-  warmingRule?: aws_events.Rule
 }
 
 /**
@@ -321,7 +319,7 @@ export class Api extends BronyaConstruct {
             }
           })
 
-          await this.config.constructs?.lambdaUpload?.(uploadDirectory)
+          await route.constructs?.lambdaUpload?.(uploadDirectory)
 
           const defaultFunctionProps: aws_lambda.FunctionProps = {
             functionName,
@@ -359,31 +357,23 @@ export class Api extends BronyaConstruct {
 
           resource.addMethod(httpMethod, lambdaIntegration, methodOptions)
 
-          const functionResources: FunctionResources = {
+          let functionResources: FunctionResources = {
             functionProps,
-            function: handler,
+            handler,
             lambdaIntegration,
             lambdaIntegrationOptions,
             methodOptions,
           }
 
-          if (props.constructs?.includeWarmers) {
-            const warmingTarget = new aws_events_targets.LambdaFunction(handler, {
-              event: aws_events.RuleTargetInput.fromObject({ body: warmerRequestBody }),
-            })
+          const functionPlugins = Array.isArray(route.constructs?.functionPlugin)
+            ? route.constructs?.functionPlugin ?? []
+            : [route.constructs?.functionPlugin]
 
-            const warmingRule = new aws_events.Rule(
-              this,
-              `${this.id}-${functionProps.functionName}-warming-rule`,
-              {
-                schedule: aws_events.Schedule.rate(aws_core.Duration.minutes(5)),
-              },
-            )
-
-            warmingRule.addTarget(warmingTarget)
-
-            functionResources.warmingTarget = warmingTarget
-            functionResources.warmingRule = warmingRule
+          for (const functionPlugin of functionPlugins) {
+            const result = await functionPlugin?.(functionResources)
+            if (result) {
+              functionResources = result
+            }
           }
 
           functions[httpMethod] = functionResources
