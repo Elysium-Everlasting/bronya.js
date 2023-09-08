@@ -87,10 +87,14 @@ export function wrapExpressHandler(handler: APIGatewayProxyHandler, hooks?: Serv
       return
     }
 
+    const body = result.isBase64Encoded ? decode(result.body) : result.body
+
+    if (result.isBase64Encoded) {
+      delete result.headers?.['content-encoding']
+    }
+
     res.status(result.statusCode)
     res.set(result.headers)
-
-    const body = result.isBase64Encoded ? decode(result.body) : result.body
 
     try {
       res.send(JSON.parse(body))
