@@ -357,6 +357,13 @@ export class Api extends BronyaConstruct {
 
           resource.addMethod(httpMethod, lambdaIntegration, methodOptions)
 
+          /**
+           * TODO: add a way to customize this, i.e. via a {@link FunctionPlugin}.
+           */
+          if (httpMethod === 'GET') {
+            resource.addMethod('HEAD', lambdaIntegration, methodOptions)
+          }
+
           let functionResources: FunctionResources = {
             functionProps,
             handler,
@@ -370,10 +377,7 @@ export class Api extends BronyaConstruct {
             : [route.constructs?.functionPlugin]
 
           for (const functionPlugin of functionPlugins) {
-            const result = await functionPlugin?.(functionResources)
-            if (result) {
-              functionResources = result
-            }
+            functionResources = (await functionPlugin?.(functionResources)) ?? functionResources
           }
 
           functions[httpMethod] = functionResources
