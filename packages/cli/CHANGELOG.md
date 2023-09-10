@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.10.11
+
+### Patch Changes
+
+- 1f265b8: fix: don't duplicate id for lambda name
+
 ## 0.10.10
 
 ### Patch Changes
