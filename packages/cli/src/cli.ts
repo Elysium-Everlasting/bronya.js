@@ -97,7 +97,7 @@ export class CLI extends EventEmitter {
    *
    * Which is also applied to sub-commands.
    */
-  option(rawName: string, description: string, config?: OptionConfig) {
+  option(rawName: string, description?: string, config?: OptionConfig) {
     this.globalCommand.option(rawName, description, config)
     return this
   }

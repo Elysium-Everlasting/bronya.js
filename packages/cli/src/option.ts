@@ -228,7 +228,7 @@ export default class Option<T = unknown> {
 
   constructor(
     public rawName: string,
-    public description: string,
+    public description?: string,
     config?: OptionConfig,
   ) {
     this.config = Object.assign({}, config)

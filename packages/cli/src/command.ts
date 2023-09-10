@@ -125,7 +125,7 @@ export class Command<RawArgs extends string = '', T = unknown> {
    */
   option<RawName extends string>(
     rawName: RawName,
-    description: string,
+    description?: string,
     config?: OptionConfig,
   ): Command<RawArgs, T & OptionParser<RawName>> {
     this.options.push(new Option(rawName, description, config))
