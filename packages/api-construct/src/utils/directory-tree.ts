@@ -30,6 +30,11 @@ export interface DirectoryTreeDetails {
   entryPoint: string
 
   /**
+   * The name of the file to load config overrides.
+   */
+  configFile: string
+
+  /**
    * The name of the handler file that's uploaded to Lambda.
    *
    * @default "handler.js"

@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { BronyaConstruct, Construct } from '@bronya.js/core'
@@ -7,6 +6,7 @@ import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import * as aws_core from 'aws-cdk-lib/core'
 import type { BuildOptions } from 'esbuild'
+import createJITI from 'jiti'
 
 import { isHttpMethod } from './integrations/lambda/index.js'
 import type { ApiPlugin } from './plugins/index.js'
@@ -190,6 +190,7 @@ export class Api extends BronyaConstruct {
       root: config.root ?? getClosestProjectDirectory(),
       directory: 'src',
       entryPoint: '+endpoint.ts',
+      configFile: 'bronya.config.ts',
       outDirectory: '.bronya',
       exitPoint: 'handler.js',
       uploadDirectory: 'dist',
@@ -212,11 +213,6 @@ export class Api extends BronyaConstruct {
    * Initialize the route configs.
    */
   async init() {
-    /**
-     * Lazily computed.
-     */
-    let require: NodeRequire
-
     const filesWithEntrypoints = findDirectoriesWithFile(this.tree.entryPoint, this.tree.directory)
 
     const processDirectory = async (
@@ -225,6 +221,8 @@ export class Api extends BronyaConstruct {
     ) => {
       const entryPoint = path.resolve(directory, this.config.entryPoint)
 
+      const configFile = path.resolve(directory, this.config.configFile)
+
       const exitPoint = this.config.exitPoint ?? path.basename(entryPoint)
 
       /**
@@ -232,24 +230,19 @@ export class Api extends BronyaConstruct {
        */
       const outDirectory = this.tree.directoryToOutDirectory(directory)
 
-      const esbuild = this.config.esbuild
+      let overrides: ApiPropsOverride = {}
 
-      await buildApiRoute({ esbuild, entryPoint, exitPoint, outDirectory })
-
-      const file = path.resolve(outDirectory, exitPoint)
-
-      const exports =
-        esbuild.format === 'cjs'
-          ? (require ??= createRequire(__filename))(file)
-          : await import(`${file}?update=${Date.now()}`)
-
-      const overrides: ApiPropsOverride = exports?.default?.overrides ?? exports?.overrides ?? {}
+      if (fs.existsSync(configFile)) {
+        const exports = await createJITI(configFile)(configFile)
+        overrides = exports?.default?.overrides ?? exports?.overrides ?? {}
+      }
 
       this.routes[directory] = {
         ...this.config,
         directory,
         endpoint,
         entryPoint,
+        configFile,
         exitPoint,
         methods: Object.keys(exports).filter(isHttpMethod),
         outDirectory,

@@ -16,7 +16,7 @@ export async function buildApiRoute(apiRouteBuildOptions: BuildOptions) {
   }
 
   esbuildOptions.entryPoints ??= {
-    [apiRouteBuildOptions.exitPoint.replace(/\..?js$/, '')]: apiRouteBuildOptions.entryPoint,
+    [apiRouteBuildOptions.exitPoint.replace(/\.(c|m)?js$/, '')]: apiRouteBuildOptions.entryPoint,
   }
 
   fs.rmSync(esbuildOptions.outdir, { recursive: true, force: true })
