@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.10.10
+
+### Patch Changes
+
+- fa26c8d: feat: make option description optional
+
 ## 0.10.9
 
 ### Patch Changes

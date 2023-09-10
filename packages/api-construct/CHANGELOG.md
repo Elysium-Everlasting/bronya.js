@@ -1,5 +1,14 @@
 # @bronya.js/api-construct
 
+## 0.10.10
+
+### Patch Changes
+
+- fa26c8d: feat: make option description optional
+- Updated dependencies [fa26c8d]
+  - @bronya.js/cli@0.10.10
+  - @bronya.js/core@0.10.10
+
 ## 0.10.9
 
 ### Patch Changes
