@@ -1,5 +1,17 @@
 # @bronya.js/api-construct
 
+## 0.10.12
+
+### Patch Changes
+
+- 4acfaab: # feat: use separate config file for overrides
+  - A configFile property is customizable on the api props which will be read to get config overrides.
+  - By default, this will be the same as the root config file.
+  - The root config file itself isn't customizable at this time.
+- Updated dependencies [4acfaab]
+  - @bronya.js/cli@0.10.12
+  - @bronya.js/core@0.10.12
+
 ## 0.10.11
 
 ### Patch Changes
