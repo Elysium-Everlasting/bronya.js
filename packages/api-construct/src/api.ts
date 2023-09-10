@@ -336,7 +336,7 @@ export class Api extends BronyaConstruct {
 
           const handler = new aws_lambda.Function(
             this,
-            `${this.id}-${functionProps.functionName}-handler`,
+            `${functionProps.functionName}-handler`,
             functionProps,
           )
 
