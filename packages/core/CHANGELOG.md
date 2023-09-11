@@ -1,5 +1,16 @@
 # @bronya.js/core
 
+## 0.11.0
+
+### Minor Changes
+
+- 17bcaff: fix: copy files recursively from the out directory to the upload directory
+
+### Patch Changes
+
+- Updated dependencies [17bcaff]
+  - @bronya.js/cli@0.11.0
+
 ## 0.10.12
 
 ### Patch Changes
