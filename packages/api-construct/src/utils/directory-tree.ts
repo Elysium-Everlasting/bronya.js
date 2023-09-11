@@ -31,6 +31,8 @@ export interface DirectoryTreeDetails {
 
   /**
    * The name of the file to load config overrides.
+   *
+   * @default "+config.ts"
    */
   configFile: string
 

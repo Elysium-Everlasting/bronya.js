@@ -1,4 +1,6 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import os from 'node:os'
 import path from 'node:path'
 
 import { BronyaConstruct, Construct } from '@bronya.js/core'
@@ -66,6 +68,8 @@ export interface SynthProps {
  */
 export type FunctionPlugin = (
   functionResources: FunctionResources,
+  scope: Api,
+  id: string,
 ) => MaybePromise<FunctionResources | Nullish>
 
 /**
@@ -114,15 +118,6 @@ export interface RouteInfo extends ApiProps {
    * @remarks **Does include** the leading slash.
    */
   endpoint: string
-
-  /**
-   * HTTP Methods that the API route supports.
-   *
-   * @example ["GET", "POST"]
-   *
-   * @remarks "HEAD" and "GET" must both be included together per the HTTP spec. But we'll handle that for you.
-   */
-  methods: string[]
 }
 
 /**
@@ -190,7 +185,7 @@ export class Api extends BronyaConstruct {
       root: config.root ?? getClosestProjectDirectory(),
       directory: 'src',
       entryPoint: '+endpoint.ts',
-      configFile: 'bronya.config.ts',
+      configFile: '+config.ts',
       outDirectory: '.bronya',
       exitPoint: 'handler.js',
       uploadDirectory: 'dist',
@@ -244,7 +239,6 @@ export class Api extends BronyaConstruct {
         entryPoint,
         configFile,
         exitPoint,
-        methods: Object.keys(exports).filter(isHttpMethod),
         outDirectory,
         ...overrides,
       }
@@ -257,6 +251,8 @@ export class Api extends BronyaConstruct {
    * Allocate AWS resources with the AWS-CDK.
    */
   async synth(props: SynthProps = {}) {
+    let require: NodeRequire
+
     const api = new aws_apigateway.RestApi(
       this,
       `${this.id}-REST-API`,
@@ -269,6 +265,15 @@ export class Api extends BronyaConstruct {
       Object.entries(this.routes).map(async ([_directory, route]) => {
         await buildApiRoute(route)
 
+        const builtEntryPoint = path.resolve(route.outDirectory, route.exitPoint)
+
+        const exports =
+          route.esbuild.format === 'cjs'
+            ? (require ??= createRequire(''))(builtEntryPoint)
+            : await import(builtEntryPoint)
+
+        const methods = Object.keys(exports).filter(isHttpMethod)
+
         /**
          * Trim leading slash because API Gateway doesn't need to process it.
          */
@@ -278,7 +283,7 @@ export class Api extends BronyaConstruct {
           return route ? resource.getResource(route) ?? resource.addResource(route) : resource
         }, api.root)
 
-        for (const httpMethod of route.methods) {
+        for (const httpMethod of methods) {
           const getFunctionProps =
             props.constructs?.functionProps ?? route.constructs?.functionProps
 
@@ -302,15 +307,16 @@ export class Api extends BronyaConstruct {
            */
           const uploadDirectory = this.tree.directoryToUploadDirectory(route.directory)
 
-          fs.mkdirSync(uploadDirectory, { recursive: true })
+          const temporaryDirectory = path.join(os.tmpdir(), this.id, route.directory)
 
-          // Copy all files from the out directory to the upload directory.
-          fs.readdirSync(outDirectory).forEach((file) => {
-            const sourceFile = path.join(outDirectory, file)
-            if (fs.lstatSync(sourceFile).isFile()) {
-              fs.copyFileSync(sourceFile, path.join(uploadDirectory, file))
-            }
-          })
+          fs.cpSync(outDirectory, temporaryDirectory, { recursive: true })
+
+          try {
+            fs.renameSync(temporaryDirectory, uploadDirectory)
+          } catch {
+            fs.cpSync(temporaryDirectory, uploadDirectory, { recursive: true })
+            fs.rmSync(temporaryDirectory, { recursive: true })
+          }
 
           await route.constructs?.lambdaUpload?.(uploadDirectory)
 
@@ -370,7 +376,8 @@ export class Api extends BronyaConstruct {
             : [route.constructs?.functionPlugin]
 
           for (const functionPlugin of functionPlugins) {
-            functionResources = (await functionPlugin?.(functionResources)) ?? functionResources
+            functionResources =
+              (await functionPlugin?.(functionResources, this, this.id)) ?? functionResources
           }
 
           functions[httpMethod] = functionResources
