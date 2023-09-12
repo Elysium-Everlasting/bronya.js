@@ -231,6 +231,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.18.2
+      fs-extra:
+        specifier: ^11.1.1
+        version: 11.1.1
       jiti:
         specifier: ^1.19.1
         version: 1.19.1
@@ -250,6 +253,9 @@ importers:
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
+      '@types/fs-extra':
+        specifier: ^11.0.1
+        version: 11.0.1
       esbuild:
         specifier: ^0.19.2
         version: 0.19.2
@@ -2365,6 +2371,16 @@ packages:
       '@types/serve-static': 1.15.2
     dev: true
 
+  /@types/fs-extra@11.0.1:
+    resolution:
+      {
+        integrity: sha512-MxObHvNl4A69ofaTRU8DFqvgzzv8s9yRtaPPm5gud9HDNvpB3GPQFvNuTWAI59B9huVGV5jXYJwbCsmBsOGYWA==,
+      }
+    dependencies:
+      '@types/jsonfile': 6.1.1
+      '@types/node': 20.4.5
+    dev: true
+
   /@types/http-errors@2.0.1:
     resolution:
       {
@@ -2400,6 +2416,15 @@ packages:
       {
         integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==,
       }
+    dev: true
+
+  /@types/jsonfile@6.1.1:
+    resolution:
+      {
+        integrity: sha512-GSgiRCVeapDN+3pqA35IkQwasaCh/0YFH5dEF6S88iDvEn901DjOeH3/QPY+XYP1DFzDZPvIvfeEgk+7br5png==,
+      }
+    dependencies:
+      '@types/node': 20.4.5
     dev: true
 
   /@types/lint-staged@13.2.0:

@@ -33,9 +33,9 @@ class MyStack extends Stack {
       banner: { js },
     },
     constructs: {
-      lambdaUpload(directory) {
-        console.log({ directory })
-      },
+      // lambdaUpload(directory) {
+      //   console.log({ directory })
+      // },
     },
   })
 

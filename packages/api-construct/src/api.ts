@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
@@ -8,6 +7,7 @@ import * as aws_apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as aws_lambda from 'aws-cdk-lib/aws-lambda'
 import * as aws_core from 'aws-cdk-lib/core'
 import type { BuildOptions } from 'esbuild'
+import fs from 'fs-extra'
 import createJITI from 'jiti'
 
 import { isHttpMethod } from './integrations/lambda/index.js'
@@ -309,14 +309,22 @@ export class Api extends BronyaConstruct {
 
           const temporaryDirectory = path.join(os.tmpdir(), this.id, route.directory)
 
-          fs.cpSync(outDirectory, temporaryDirectory, { recursive: true })
+          /**
+           * When copying all of a handler's files to the upload directory,
+           * don't include nested directories that also have routes.
+           */
+          const otherOutDirectories = Object.values(this.routes)
+            .map((route) => route.outDirectory)
+            .filter((directory) => directory !== outDirectory)
 
-          try {
-            fs.renameSync(temporaryDirectory, uploadDirectory)
-          } catch {
-            fs.cpSync(temporaryDirectory, uploadDirectory, { recursive: true })
-            fs.rmSync(temporaryDirectory, { recursive: true })
-          }
+          await fs.copy(outDirectory, temporaryDirectory, {
+            overwrite: true,
+            filter: (src) => {
+              return !otherOutDirectories.some((directory) => src === directory)
+            },
+          })
+
+          await fs.move(temporaryDirectory, uploadDirectory)
 
           await route.constructs?.lambdaUpload?.(uploadDirectory)
 
