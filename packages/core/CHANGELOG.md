@@ -1,5 +1,13 @@
 # @bronya.js/core
 
+## 0.11.1
+
+### Patch Changes
+
+- f3de8d8: feat: don't copy nested routes' out directories
+- Updated dependencies [f3de8d8]
+  - @bronya.js/cli@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes
