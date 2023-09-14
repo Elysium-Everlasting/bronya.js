@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
@@ -307,7 +308,7 @@ export class Api extends BronyaConstruct {
            */
           const uploadDirectory = this.tree.directoryToUploadDirectory(route.directory)
 
-          const temporaryDirectory = path.join(os.tmpdir(), this.id, route.directory)
+          const temporaryDirectory = path.join(os.tmpdir(), crypto.randomUUID())
 
           /**
            * When copying all of a handler's files to the upload directory,
