@@ -1,5 +1,14 @@
 # @bronya.js/api-construct
 
+## 0.11.2
+
+### Patch Changes
+
+- 0ea09ff: fix: generate random string for temp directory upload
+- Updated dependencies [0ea09ff]
+  - @bronya.js/cli@0.11.2
+  - @bronya.js/core@0.11.2
+
 ## 0.11.1
 
 ### Patch Changes

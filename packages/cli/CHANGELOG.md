@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.11.2
+
+### Patch Changes
+
+- 0ea09ff: fix: generate random string for temp directory upload
+
 ## 0.11.1
 
 ### Patch Changes
