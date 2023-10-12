@@ -105,42 +105,6 @@ importers:
         specifier: ^3.12.7
         version: 3.12.7
 
-  examples/basic/cdk.out/asset.1185430998627fe0eeebd2e379e7030bde3b88544d901511b7bfa9c5aead1ad0:
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.119
-        version: 8.10.119
-
-  examples/basic/cdk.out/asset.5a10319f89b1d57432fbb815dbe3db2d92a1cc98c8266a7f713ecf942ed71375:
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.119
-        version: 8.10.119
-
-  examples/basic/cdk.out/asset.5a10319f89b1d57432fbb815dbe3db2d92a1cc98c8266a7f713ecf942ed71375/d:
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.119
-        version: 8.10.119
-
-  examples/basic/cdk.out/asset.6608c813d455b646ca5955cd7c25b6bda68b541c58bee2cb8029c25dc1750cdf:
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.119
-        version: 8.10.119
-
-  examples/basic/cdk.out/asset.c24de59c359de37a560bb8db7f5d1d46c06308d2c78dc1b9bac3dedd425abab1:
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.119
-        version: 8.10.119
-
-  examples/basic/cdk.out/asset.e6bdfd0fa059584253bb7e1196ae82287f0608ac7908b5190b12ff7edf576999:
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.119
-        version: 8.10.119
-
   examples/basic/src/api/a:
     devDependencies:
       '@types/aws-lambda':

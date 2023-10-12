@@ -303,11 +303,6 @@ export class Api extends BronyaConstruct {
            */
           const outDirectory = this.tree.directoryToOutDirectory(route.directory)
 
-          /**
-           * @example /home/user/project/src/.bronya/v1/rest/calendar/dist
-           */
-          const uploadDirectory = this.tree.directoryToUploadDirectory(route.directory)
-
           const temporaryDirectory = path.join(os.tmpdir(), crypto.randomUUID())
 
           /**
@@ -325,14 +320,12 @@ export class Api extends BronyaConstruct {
             },
           })
 
-          await fs.move(temporaryDirectory, uploadDirectory)
-
-          await route.constructs?.lambdaUpload?.(uploadDirectory)
+          await route.constructs?.lambdaUpload?.(temporaryDirectory)
 
           const defaultFunctionProps: aws_lambda.FunctionProps = {
             functionName,
             runtime: aws_lambda.Runtime.NODEJS_18_X,
-            code: aws_lambda.Code.fromAsset(uploadDirectory),
+            code: aws_lambda.Code.fromAsset(temporaryDirectory),
             handler: path.join(route.exitPoint.replace(/\..?js$/, `.${httpMethod}`)),
             architecture: aws_lambda.Architecture.ARM_64,
             environment: { ...route.environment },
