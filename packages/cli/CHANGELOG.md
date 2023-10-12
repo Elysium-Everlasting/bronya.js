@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.11.3
+
+### Patch Changes
+
+- 1847395: feat/fix/perf: don't move or copy the temporary directory
+
 ## 0.11.2
 
 ### Patch Changes

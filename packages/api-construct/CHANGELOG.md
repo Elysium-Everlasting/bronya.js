@@ -1,5 +1,14 @@
 # @bronya.js/api-construct
 
+## 0.11.3
+
+### Patch Changes
+
+- 1847395: feat/fix/perf: don't move or copy the temporary directory
+- Updated dependencies [1847395]
+  - @bronya.js/cli@0.11.3
+  - @bronya.js/core@0.11.3
+
 ## 0.11.2
 
 ### Patch Changes
