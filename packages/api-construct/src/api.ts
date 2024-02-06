@@ -84,22 +84,28 @@ export interface ApiConstructProps {
    */
   restApiProps?: (scope: Api, id: string) => aws_apigateway.RestApiProps
 
-  functionProps?: (scope: Api, id: string) => Partial<aws_lambda.FunctionProps>
+  functionProps?: (scope: Api, id: string, route: RouteInfo) => Partial<aws_lambda.FunctionProps>
 
   lambdaIntegrationOptions?: (
     scope: Api,
     id: string,
     methodAndRoute: string,
+    route: RouteInfo,
   ) => aws_apigateway.LambdaIntegrationOptions
 
-  methodOptions?: (scope: Api, id: string, methodAndRoute: string) => aws_apigateway.MethodOptions
+  methodOptions?: (
+    scope: Api,
+    id: string,
+    methodAndRoute: string,
+    route: RouteInfo,
+  ) => aws_apigateway.MethodOptions
 
   /**
    * The directory that will be uploaded to the Lambda Function.
    *
    * User can modify the directory before uploading.
    */
-  lambdaUpload?: (directory: string) => unknown
+  lambdaUpload?: (directory: string, route: RouteInfo) => unknown
 
   /**
    * Plugins that can modify the AWS constructs.
@@ -296,7 +302,7 @@ export class Api extends BronyaConstruct {
 
           const functionName = toValidAwsName(`${this.id}-${routeEndpoint}-${httpMethod}`)
 
-          const customFunctionProps = getFunctionProps?.(this, this.id)
+          const customFunctionProps = getFunctionProps?.(this, this.id, route)
 
           /**
            * @example /home/user/project/src/.bronya/v1/rest/calendar
@@ -320,7 +326,7 @@ export class Api extends BronyaConstruct {
             },
           })
 
-          await route.constructs?.lambdaUpload?.(temporaryDirectory)
+          await route.constructs?.lambdaUpload?.(temporaryDirectory, route)
 
           const defaultFunctionProps: aws_lambda.FunctionProps = {
             functionName,
@@ -347,6 +353,7 @@ export class Api extends BronyaConstruct {
             this,
             this.id,
             methodAndRoute,
+            route,
           )
 
           const lambdaIntegration = new aws_apigateway.LambdaIntegration(
@@ -354,7 +361,7 @@ export class Api extends BronyaConstruct {
             lambdaIntegrationOptions,
           )
 
-          const methodOptions = getMethodOptions?.(this, this.id, methodAndRoute)
+          const methodOptions = getMethodOptions?.(this, this.id, methodAndRoute, route)
 
           resource.addMethod(httpMethod, lambdaIntegration, methodOptions)
 
