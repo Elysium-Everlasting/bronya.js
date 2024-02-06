@@ -1,5 +1,11 @@
 # @bronya.js/cli
 
+## 0.11.4
+
+### Patch Changes
+
+- a2ae3b2: feat: pass route info to cdk prop overrides
+
 ## 0.11.3
 
 ### Patch Changes
